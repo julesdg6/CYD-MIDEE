@@ -27,6 +27,7 @@
 #include "grid_piano_mode.h"
 #include "auto_chord_mode.h"
 #include "lfo_mode.h"
+#include "tb3po_mode.h"
 #include "ui_elements.h"
 #include "midi_utils.h"
 
@@ -108,10 +109,11 @@ AppIcon apps[] = {
   {"ARP", "↗", 0xF81F, ARPEGGIATOR},   // Magenta
   {"GRID", "▣", 0x07FF, GRID_PIANO},   // Cyan
   {"CHORD", "⚘", 0xFBE0, AUTO_CHORD},  // Light Orange
-  {"LFO", "", 0xAFE5, LFO}             // Light Green
+  {"LFO", "", 0xAFE5, LFO},            // Light Green
+  {"TB3PO", "🤖", 0xF7BE, TB3PO}        // Gold (303 acid generator)
 };
 
-int numApps = 10;
+int numApps = 11;
 
 class MIDICallbacks: public BLEServerCallbacks {
     void onConnect(BLEServer* pServer) {
@@ -829,6 +831,9 @@ void loop() {
     case LFO:
       handleLFOMode();
       break;
+    case TB3PO:
+      handleTB3POMode();
+      break;
   }
   
   delay(20);
@@ -1027,6 +1032,25 @@ void drawAppGraphics(AppMode mode, int x, int y, int iconSize) {
         }
       }
       break;
+    case TB3PO: // TB3PO - 303 style robot/sequencer
+      {
+        int centerX = x + iconSize/2;
+        // Draw robot head/body
+        tft.fillRoundRect(centerX - 10, topHalfY - 8, 20, 16, 3, THEME_BG);
+        // Eyes (using icon color to match)
+        tft.fillCircle(centerX - 5, topHalfY - 3, 2, 0xF7BE); // Gold color from icon
+        tft.fillCircle(centerX + 5, topHalfY - 3, 2, 0xF7BE);
+        // Antennae
+        tft.drawLine(centerX - 6, topHalfY - 8, centerX - 8, topHalfY - 12, THEME_BG);
+        tft.drawLine(centerX + 6, topHalfY - 8, centerX + 8, topHalfY - 12, THEME_BG);
+        tft.fillCircle(centerX - 8, topHalfY - 12, 1, THEME_BG);
+        tft.fillCircle(centerX + 8, topHalfY - 12, 1, THEME_BG);
+        // Sequencer pattern (bottom)
+        for (int i = 0; i < 4; i++) {
+          tft.drawRect(centerX - 10 + i*5, topHalfY + 4, 4, 3, THEME_BG);
+        }
+      }
+      break;
   }
 }
 
@@ -1125,6 +1149,9 @@ void enterMode(AppMode mode) {
       break;
     case LFO:
       drawLFOMode();
+      break;
+    case TB3PO:
+      initializeTB3POMode();
       break;
   }
   updateStatus();

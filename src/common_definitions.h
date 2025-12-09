@@ -59,7 +59,8 @@ enum AppMode {
   ARPEGGIATOR,
   GRID_PIANO,
   AUTO_CHORD,
-  LFO
+  LFO,
+  TB3PO
 };
 
 // Music theory
