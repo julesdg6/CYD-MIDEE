@@ -22,29 +22,84 @@
 #define SCREEN_HEIGHT    320
 #define CONTENT_TOP      50  // Below header
 
-// MIDI Clock sync
-struct MIDIClockSync {
-  bool isReceiving = false;
-  unsigned long lastClockTime = 0;
-  unsigned long clockInterval = 0;
-  float calculatedBPM = 120.0;
-  int clockCount = 0;
-  bool isPlaying = false;
-  unsigned long lastBPMUpdate = 0;
-};
-extern MIDIClockSync midiClock;
-
 // BLE MIDI UUIDs
 #define SERVICE_UUID        "03b80e5a-ede8-4b33-a751-6ce34ec4c700"
 #define CHARACTERISTIC_UUID "7772e5db-3868-4112-a1a9-f2669d106bf3"
 
-// Touch handling
+// Touch handling (must be defined BEFORE TouchThread)
 struct TouchState {
   bool wasPressed = false;
   bool isPressed = false;
   bool justPressed = false;
   bool justReleased = false;
   int x = 0, y = 0;
+};
+
+// Global BPM (shared across all modules)
+struct GlobalState {
+  float bpm = 120.0;
+  bool isPlaying = false;
+  unsigned long lastBeatTime = 0;
+  int currentMidiChannel = 1;  // 1-16
+};
+extern GlobalState globalState;
+
+// MIDI Clock sync (keeps compatibility with existing code during migration)
+struct MIDIClockSync {
+  bool isReceiving = false;
+  unsigned long lastClockTime = 0;
+  unsigned long clockInterval = 0;
+  float calculatedBPM = 120.0;  // Kept for compatibility, synced with globalState.bpm
+  int clockCount = 0;
+  bool isPlaying = false;  // Kept for compatibility, synced with globalState.isPlaying
+  unsigned long lastBPMUpdate = 0;
+};
+extern MIDIClockSync midiClock;
+
+// Touch event callback type
+typedef void (*TouchCallback)(int x, int y, bool pressed);
+
+// Touch thread manager
+class TouchThread {
+public:
+  static void begin();
+  static void update();
+  static void registerCallback(TouchCallback callback);
+  static void unregisterCallback();
+  static TouchState getState();
+  
+private:
+  static TouchCallback activeCallback;
+  static TouchState currentState;
+  static SemaphoreHandle_t touchMutex;
+  static void touchTask(void* parameter);
+};
+
+// MIDI thread manager
+class MIDIThread {
+public:
+  static void begin();
+  static void sendNoteOn(uint8_t note, uint8_t velocity);
+  static void sendNoteOff(uint8_t note, uint8_t velocity);
+  static void sendCC(uint8_t controller, uint8_t value);
+  static void sendPitchBend(int16_t value);
+  static void sendClock();
+  static void sendStart();
+  static void sendStop();
+  static void setBPM(float bpm);
+  static float getBPM();
+  
+private:
+  static QueueHandle_t midiQueue;
+  static SemaphoreHandle_t midiMutex;
+  static void midiTask(void* parameter);
+  
+  struct MIDIMessage {
+    enum Type { NOTE_ON, NOTE_OFF, CC, PITCH_BEND, CLOCK, START, STOP } type;
+    uint8_t data1;
+    uint8_t data2;
+    int16_t data16;
+  };
 };
 
 // App modes

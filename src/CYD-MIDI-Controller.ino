@@ -715,6 +715,11 @@ void setup() {
   delay(100);
   Serial.println("\n\nCYD MIDI Controller Starting...");
   
+  // Initialize global state
+  globalState.bpm = 120.0;
+  globalState.isPlaying = false;
+  globalState.currentMidiChannel = 1;
+  
   // Touch setup
   mySpi.begin(XPT2046_CLK, XPT2046_MISO, XPT2046_MOSI, XPT2046_CS);
   ts.begin();
@@ -741,6 +746,13 @@ void setup() {
   Serial.println("Initializing BLE MIDI...");
   BLEDevice::init("CYD MIDI");
   Serial.println("BLE Device initialized");
+  
+  // Initialize thread managers (TODO: Complete migration to threaded architecture)
+  // Serial.println("Starting Touch Thread...");
+  // TouchThread::begin();
+  // Serial.println("Starting MIDI Thread...");
+  // MIDIThread::begin();
+  // Serial.println("Thread managers initialized");
   
   BLEServer *server = BLEDevice::createServer();
   server->setCallbacks(new MIDICallbacks());
@@ -793,15 +805,26 @@ void setup() {
 }
 
 void loop() {
+  // Update touch state (using existing calibration logic)
   updateTouch();
+  
+  // TODO: Switch to threaded touch input
+  // touch = TouchThread::getState();
   
   // Handle web server requests
   handleWebServer();
+  
+  // Sync global state with MIDI clock (compatibility layer)
+  if (midiClock.isReceiving) {
+    globalState.bpm = midiClock.calculatedBPM;
+    globalState.isPlaying = midiClock.isPlaying;
+  }
   
   // Check MIDI clock timeout (stop receiving if no clock for 2 seconds)
   if (midiClock.isReceiving && (millis() - midiClock.lastBPMUpdate > 2000)) {
     midiClock.isReceiving = false;
     midiClock.isPlaying = false;
+    globalState.isPlaying = false;
     Serial.println("MIDI Clock timeout");
   }
   
