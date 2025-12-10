@@ -60,7 +60,11 @@ enum AppMode {
   GRID_PIANO,
   AUTO_CHORD,
   LFO,
-  TB3PO
+  TB3PO,
+  GRIDS,
+  RAGA,
+  EUCLIDEAN,
+  MORPH
 };
 
 // Music theory

@@ -14,29 +14,66 @@ Advanced touchscreen Bluetooth MIDI controller for the ESP32-2432S028R "Cheap Ye
 </div>
 
 <details>
-<summary>📸 View All Mode Screenshots</summary>
+<summary>📸 View All Mode Screenshots (15 Modes)</summary>
 
+### Menu & System
 <div align="center">
   <img src="assets/screenshots/01_settings_menu.bmp" width="400" alt="Settings Menu"><br>
-  <em>Settings Menu</em>
+  <em>Settings Menu - Calibration, MIDI, BLE, Screenshots</em>
+  
+  <img src="assets/screenshots/02_bluetooth_status.bmp" width="400" alt="Bluetooth Status"><br>
+  <em>Bluetooth Status - Connection & MAC Address</em>
+</div>
+
+### Original 10 Modes
+<div align="center">
+  <img src="assets/screenshots/03_keyboard.bmp" width="400" alt="Keyboard"><br>
+  <em>Virtual Keyboard - Scales & Key Selection</em>
   
   <img src="assets/screenshots/04_sequencer.bmp" width="400" alt="Sequencer"><br>
-  <em>16-Step Sequencer</em>
+  <em>16-Step Sequencer - 4 Tracks</em>
+  
+  <img src="assets/screenshots/05_bouncing_ball.bmp" width="400" alt="Bouncing Ball"><br>
+  <em>Bouncing Ball - Generative Ambient</em>
+  
+  <img src="assets/screenshots/06_physics_drop.bmp" width="400" alt="Physics Drop"><br>
+  <em>Physics Drop - Gravity Simulation</em>
+  
+  <img src="assets/screenshots/07_random_gen.bmp" width="400" alt="Random Generator"><br>
+  <em>Random Generator - Controlled Chaos</em>
   
   <img src="assets/screenshots/08_xy_pad.bmp" width="400" alt="XY Pad"><br>
-  <em>XY Pad Controller</em>
+  <em>XY Pad - Real-time Expression</em>
   
   <img src="assets/screenshots/09_arpeggiator.bmp" width="400" alt="Arpeggiator"><br>
-  <em>Arpeggiator</em>
+  <em>Arpeggiator - Chord Patterns</em>
   
   <img src="assets/screenshots/10_grid_piano.bmp" width="400" alt="Grid Piano"><br>
-  <em>Grid Piano (4ths Layout)</em>
+  <em>Grid Piano - 4ths Layout</em>
   
   <img src="assets/screenshots/11_auto_chord.bmp" width="400" alt="Auto Chord"><br>
-  <em>Auto Chord Mode</em>
+  <em>Auto Chord - Diatonic Progressions</em>
   
   <img src="assets/screenshots/12_lfo.bmp" width="400" alt="LFO"><br>
-  <em>LFO Modulator</em>
+  <em>LFO Modulator - Waveform Control</em>
+</div>
+
+### New Advanced Modes
+<div align="center">
+  <img src="assets/screenshots/13_tb3po.bmp" width="400" alt="TB3PO"><br>
+  <em>TB3PO 😊 - Acid Bassline Generator</em>
+  
+  <img src="assets/screenshots/14_grids.bmp" width="400" alt="Grids"><br>
+  <em>GRIDS ◉ - Euclidean Drum Sequencer</em>
+  
+  <img src="assets/screenshots/15_raga.bmp" width="400" alt="Raga"><br>
+  <em>RAGA 🎵 - Indian Classical Music</em>
+  
+  <img src="assets/screenshots/16_euclidean.bmp" width="400" alt="Euclidean"><br>
+  <em>EUCLID ◯ - Mathematical Rhythms</em>
+  
+  <img src="assets/screenshots/17_morph.bmp" width="400" alt="Morph"><br>
+  <em>MORPH ∞ - Gesture Synthesis</em>
 </div>
 
 </details>
@@ -48,8 +85,9 @@ Advanced touchscreen Bluetooth MIDI controller for the ESP32-2432S028R "Cheap Ye
 
 ## Features
 
-### 10 Interactive Modes
+### 15 Interactive Modes
 
+#### Original Modes
 - **KEYS** - Virtual piano keyboard with scale and key controls
 - **BEATS** - 16-step sequencer with 4 tracks and tempo control
 - **ZEN** - Ambient bouncing ball mode for generative music
@@ -61,13 +99,23 @@ Advanced touchscreen Bluetooth MIDI controller for the ESP32-2432S028R "Cheap Ye
 - **CHORD** - Auto-chord mode with diatonic chord progressions
 - **LFO** - Low-frequency oscillator for modulation effects
 
+#### New Advanced Modes
+- **TB3PO** 😊 - Acid bassline generator inspired by the TB-303 with probabilistic sequencing
+- **GRIDS** ◉ - Euclidean drum sequencer based on Mutable Instruments Grids topology
+- **RAGA** 🎵 - Indian classical music mode with authentic ragas and microtonal support
+- **EUCLID** ◯ - Pure Euclidean rhythm generator with mathematical pattern distribution
+- **MORPH** ∞ - Gesture-based morphing synthesizer for expressive performance
+
 ### Core Features
 
 - **Bluetooth MIDI** - Wireless connection to DAWs and music software
+- **WiFi Web Server** - Remote file management and screenshot capture via web browser
 - **Enhanced Touch UI** - Enlarged buttons (60-80px) and optimized layouts for capacitive touchscreens
 - **Accurate Touch Detection** - Fixed coordinate mismatches between visual and touch layers
 - **Real-time Control** - Low-latency MIDI output with configurable MIDI channels
 - **Visual Feedback** - Responsive graphics with status icons (BLE, SD card, BPM display)
+- **Screenshot Capture** - Save all mode screens to SD card or download via web interface
+- **Persistent WiFi Config** - Store WiFi credentials on SD card for automatic connection
 ## What You Need
 
 ### Supported Hardware
@@ -80,8 +128,11 @@ All boards available for ~$15 from AliExpress/Amazon
 
 ### Additional
 
-- **MicroSD Card** (optional) - For screenshot capture and future features
+- **MicroSD Card** (optional) - For screenshot capture, WiFi config storage, and web file management
 - **PlatformIO** or **Arduino IDE** with ESP32 support
+- **WiFi Network** (optional) - For web server and remote control features
+
+### Recent Enhancements
 
 - ✅ **Larger touch targets** - Minimum 45px buttons for better accuracy
 - ✅ **Fixed touch detection** - Resolved Y-coordinate mismatches in all modes
@@ -89,6 +140,10 @@ All boards available for ~$15 from AliExpress/Amazon
 - ✅ **Better spacing** - No overlapping buttons, optimized for 480×320 display
 - ✅ **Header icons** - BLE status, SD card indicator, and BPM display on main menu
 - ✅ **MIDI channel support** - Configurable per-session MIDI channels (1-16)
+- ✅ **Expanded flash memory** - 3.1MB app partition for advanced features
+- ✅ **5 new advanced modes** - TB3PO, Grids, Raga, Euclidean, Morph
+- ✅ **Web server** - Remote file management and screenshot downloads
+- ✅ **WiFi persistence** - Store network credentials on SD card
 
 ## Installation
 
@@ -138,10 +193,19 @@ Replace the `libraries/TFT_eSPI/User_Setup.h` with the `User_Setup.h` from the r
 ### Settings Menu
 
 Access via the cog icon in the main menu:
-- **Calibrate Touch** - Recalibrate touchscreen
+- **Calibrate Touch** - Recalibrate touchscreen coordinates
 - **MIDI Channel** - Change MIDI channel (1-16)
 - **BLE Toggle** - Enable/disable Bluetooth advertising
-- **Screenshot Mode** - Cycle through all modes and save screenshots to SD card
+- **Screenshot Mode** - Cycle through all 15 modes and save screenshots to SD card
+- **Web Server** - Automatically starts on WiFi connection (configurable via SD card)
+
+### Web Server Interface
+
+Access at `http://[device-ip]` when connected to WiFi:
+- **File Browser** - Navigate SD card directories, upload/download/delete files
+- **Screenshot Capture** - Take instant screenshots via `/screenshot` endpoint
+- **WiFi Configuration** - Save network credentials to `/wifi_config.txt` for automatic connection
+- **Directory Navigation** - Full filesystem access with breadcrumb navigation
 
 ## Troubleshooting
 
@@ -151,6 +215,9 @@ Access via the cog icon in the main menu:
 - **Touch not responding**: Verify XPT2046_Touchscreen library is installed
 - **Bluetooth not pairing**: Toggle BLE off/on in Settings, restart device
 - **SD card not detected**: Ensure FAT32 formatted card is properly inserted
+- **WiFi not connecting**: Create `/wifi_config.txt` on SD card with SSID on line 1, password on line 2
+- **Web server not accessible**: Check device IP address on serial monitor or connect to AP mode "CYD-MIDI" (password: midi1234)
+- **Screenshots failing**: Ensure SD card has sufficient space and `/screenshots/` directory exists
 
 ## Development
 

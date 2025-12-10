@@ -26,7 +26,7 @@ struct TB3POState {
   uint16_t accents = 0;    // Bitfield of accents
   uint16_t oct_ups = 0;    // Bitfield of octave ups
   uint16_t oct_downs = 0;  // Bitfield of octave downs
-  uint8_t notes[TB3PO_MAX_STEPS]; // Note indices in scale
+  uint8_t notes[TB3PO_MAX_STEPS] = {0}; // Note indices in scale
   
   // Playback
   uint8_t step = 0;
@@ -47,6 +47,9 @@ struct TB3POState {
   // BPM control
   float bpm = 120.0;
   bool useInternalClock = true;
+  
+  // Touch handling
+  bool readyForInput = false; // Wait for initial touch release before accepting input
 };
 
 extern TB3POState tb3po;
@@ -54,6 +57,7 @@ extern TB3POState tb3po;
 // Function declarations
 void initializeTB3POMode();
 void drawTB3POMode();
+void updateTB3POSteps();  // Efficient partial redraw
 void handleTB3POMode();
 
 #endif

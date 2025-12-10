@@ -12,6 +12,8 @@
 #include <BLE2902.h>
 #include <SD.h>
 #include <FS.h>
+#include <WiFi.h>
+#include <WebServer.h>
 
 // Include calibration first (needs tft and ts)
 #include "touch_calibration.h"
@@ -28,6 +30,11 @@
 #include "auto_chord_mode.h"
 #include "lfo_mode.h"
 #include "tb3po_mode.h"
+#include "grids_mode.h"
+#include "raga_mode.h"
+#include "euclidean_mode.h"
+#include "morph_mode.h"
+#include "web_server.h"
 #include "ui_elements.h"
 #include "midi_utils.h"
 
@@ -98,22 +105,27 @@ struct AppIcon {
   AppMode mode;
 };
 
-#define MAX_APPS 12  // Can easily expand to 3x4 grid
+#define MAX_APPS 15  // Can easily expand to 3x5 grid
+// RGB565 optimized colors - 5 bits red, 6 bits green, 5 bits blue
 AppIcon apps[] = {
-  {"KEYS", "♪", 0xF800, KEYBOARD},     // Red
-  {"BEATS", "♫", 0xFD00, SEQUENCER},   // Orange
-  {"ZEN", "●", 0xFFE0, BOUNCING_BALL}, // Yellow
-  {"DROP", "⬇", 0x07E0, PHYSICS_DROP}, // Green
-  {"RNG", "※", 0x001F, RANDOM_GENERATOR}, // Blue
-  {"XY PAD", "◈", 0x781F, XY_PAD},     // Purple
-  {"ARP", "↗", 0xF81F, ARPEGGIATOR},   // Magenta
-  {"GRID", "▣", 0x07FF, GRID_PIANO},   // Cyan
-  {"CHORD", "⚘", 0xFBE0, AUTO_CHORD},  // Light Orange
-  {"LFO", "", 0xAFE5, LFO},            // Light Green
-  {"TB3PO", "🤖", 0xF7BE, TB3PO}        // Gold (303 acid generator)
+  {"KEYS", "♪", 0x1A3D, KEYBOARD},     // Deep navy (row 1)
+  {"BEATS", "♫", 0x3C1F, SEQUENCER},   // Royal blue
+  {"ZEN", "●", 0x54BF, BOUNCING_BALL}, // Medium blue
+  {"DROP", "⬇", 0x5EDF, PHYSICS_DROP}, // Light blue
+  {"RNG", "※", 0x07FF, RANDOM_GENERATOR}, // Bright cyan
+  {"XY PAD", "◈", 0x1C83, XY_PAD},     // Dark green (row 2)
+  {"ARP", "↗", 0x2DC5, ARPEGGIATOR},   // Green
+  {"GRID", "▣", 0x8E88, GRID_PIANO},   // Lime green
+  {"CHORD", "⚘", 0xCF8A, AUTO_CHORD},  // Yellow-green
+  {"LFO", "", 0xFFE0, LFO},            // Yellow
+  {"TB3PO", "😊", 0xFD60, TB3PO},       // Amber (row 3) - acid smiley
+  {"GRIDS", "◉", 0xFB20, GRIDS},       // Orange - MI Grids
+  {"RAGA", "🎵", 0xF8A5, RAGA},         // Red-orange - Indian classical
+  {"EUCLID", "◯", 0xF800, EUCLIDEAN},  // Pure red - Euclidean rhythm
+  {"MORPH", "∞", 0x8800, MORPH}        // Dark red - Gesture morphing
 };
 
-int numApps = 11;
+int numApps = 15;
 
 class MIDICallbacks: public BLEServerCallbacks {
     void onConnect(BLEServer* pServer) {
@@ -133,6 +145,10 @@ class MIDICallbacks: public BLEServerCallbacks {
       for (int i = 0; i < 128; i++) {
         sendMIDI(0x80, i, 0);
       }
+      // Restart advertising to allow reconnection
+      delay(500); // Brief delay before restarting advertising
+      BLEDevice::startAdvertising();
+      Serial.println("BLE disconnected - advertising restarted for reconnection");
     }
 };
 
@@ -280,6 +296,10 @@ void initSDCard() {
   
   sdCardAvailable = true;
   SD.end(); // Release SPI bus for display
+  
+  // Initialize web server for file management
+  Serial.println("\n=== WiFi Web Server Initialization ===");
+  initializeWebServer();
 }
 
 void showSDCardInfo() {
@@ -371,6 +391,10 @@ void saveScreenshot(String filename) {
     Serial.println("Cannot save screenshot: SD card not available");
     return;
   }
+  
+  // Ensure SD card is unmounted first to avoid VFS registration errors
+  SD.end();
+  delay(100);
   
   // Mount SD card
   if (!SD.begin(SD_CS, sdSPI)) {
@@ -469,10 +493,10 @@ void cycleModesForScreenshots() {
   
   AppMode modes[] = {KEYBOARD, SEQUENCER, BOUNCING_BALL, PHYSICS_DROP, 
                      RANDOM_GENERATOR, XY_PAD, ARPEGGIATOR, GRID_PIANO, 
-                     AUTO_CHORD, LFO};
+                     AUTO_CHORD, LFO, TB3PO, GRIDS, RAGA, EUCLIDEAN, MORPH};
   String modeNames[] = {"KEYBOARD", "SEQUENCER", "BOUNCING BALL", "PHYSICS DROP",
                         "RANDOM GEN", "XY PAD", "ARPEGGIATOR", "GRID PIANO",
-                        "AUTO CHORD", "LFO"};
+                        "AUTO CHORD", "LFO", "TB3PO", "GRIDS", "RAGA", "EUCLIDEAN", "MORPH"};
   
   // First capture main menu
   tft.fillRect(0, 120, 480, 40, THEME_SURFACE);
@@ -513,16 +537,26 @@ void cycleModesForScreenshots() {
   saveScreenshot("02_bluetooth_status");
   delay(500);
   
-  // Now cycle through all 10 modes
+  // Get WiFi IP address for URL display
+  String ipAddr = WiFi.localIP().toString();
+  
+  // Now cycle through all 15 modes
   String fileNames[] = {"03_keyboard", "04_sequencer", "05_bouncing_ball", "06_physics_drop",
                         "07_random_gen", "08_xy_pad", "09_arpeggiator", "10_grid_piano",
-                        "11_auto_chord", "12_lfo"};
+                        "11_auto_chord", "12_lfo", "13_tb3po", "14_grids", "15_raga", 
+                        "16_euclidean", "17_morph"};
   
-  for (int i = 0; i < 10; i++) {
-    // Show mode name
-    tft.fillRect(0, 120, 480, 40, THEME_SURFACE);
+  for (int i = 0; i < 15; i++) {
+    // Show mode name and URL
+    tft.fillRect(0, 120, 480, 60, THEME_SURFACE);
     tft.setTextColor(THEME_PRIMARY, THEME_SURFACE);
-    tft.drawCentreString("Mode " + String(i+1) + "/10: " + modeNames[i], 240, 130, 4);
+    tft.drawCentreString("Mode " + String(i+1) + "/15: " + modeNames[i], 240, 125, 4);
+    tft.setTextColor(THEME_TEXT_DIM, THEME_SURFACE);
+    String url = "http://" + ipAddr + "/download?file=/screenshots/" + fileNames[i] + ".bmp";
+    tft.drawCentreString(url, 240, 160, 1);
+    
+    // Also print to serial for easy copying
+    Serial.println(url);
     
     delay(1500);
     
@@ -566,10 +600,10 @@ void cycleModesForScreenshots() {
   tft.fillScreen(THEME_SUCCESS);
   tft.setTextColor(THEME_BG, THEME_SUCCESS);
   tft.drawCentreString("SCREENSHOTS SAVED", 240, 120, 4);
-  tft.drawCentreString("13 BMP files in /screenshots/", 240, 160, 2);
+  tft.drawCentreString("18 BMP files in /screenshots/", 240, 160, 2);
   tft.setTextColor(0x0000, THEME_SUCCESS);
-  tft.drawCentreString("Menu + Settings + BLE + 10 Modes", 240, 190, 1);
-  tft.drawCentreString("Ready to view on your computer", 240, 210, 1);
+  tft.drawCentreString("Menu + Settings + BLE + 15 Modes", 240, 190, 1);
+  tft.drawCentreString("Download via web interface", 240, 210, 1);
   delay(3000);
   
   // Return to menu
@@ -747,6 +781,10 @@ void setup() {
   initializeGridPianoMode();
   initializeAutoChordMode();
   initializeLFOMode();
+  initializeGridsMode();
+  initializeRagaMode();
+  initializeEuclideanMode();
+  initializeMorphMode();
   
   drawMenu();
   updateStatus();
@@ -756,6 +794,9 @@ void setup() {
 
 void loop() {
   updateTouch();
+  
+  // Handle web server requests
+  handleWebServer();
   
   // Check MIDI clock timeout (stop receiving if no clock for 2 seconds)
   if (midiClock.isReceiving && (millis() - midiClock.lastBPMUpdate > 2000)) {
@@ -834,6 +875,18 @@ void loop() {
     case TB3PO:
       handleTB3POMode();
       break;
+    case GRIDS:
+      handleGridsMode();
+      break;
+    case RAGA:
+      handleRagaMode();
+      break;
+    case EUCLIDEAN:
+      handleEuclideanMode();
+      break;
+    case MORPH:
+      handleMorphMode();
+      break;
   }
   
   delay(20);
@@ -869,20 +922,20 @@ void drawMenu() {
   // SD Card icon in top right
   drawSDCardIcon(445, 10);
   
-  // Dynamic grid layout - 5 icons per row with larger touch targets
-  int iconSize = 85;  // Increased from 70 for easier tapping
-  int spacing = 10;   // Reduced spacing to fit larger icons
-  int cols = 5;  // 5 icons per row
-  int rows = 3;  // Fixed to 3 rows now (2 active + 1 blank)
+  // Dynamic grid layout - 5 icons per row with bigger graphics
+  int iconSize = 85;   // Button size stays the same
+  int spacing = 5;     // Reduced spacing between columns
+  int rowSpacing = 2;  // Minimal spacing between rows to fit all 3 rows
+  int cols = 5;        // 5 icons per row
   int startX = (480 - (cols * iconSize + (cols-1) * spacing)) / 2;
-  int startY = 60;  // Start slightly higher
+  int startY = 58;     // Start slightly higher to fit 3 rows
   
-  // Draw existing apps in first 2 rows
+  // Draw all apps (now includes TB3PO as 11th app)
   for (int i = 0; i < numApps; i++) {
     int col = i % cols;
     int row = i / cols;
     int x = startX + col * (iconSize + spacing);
-    int y = startY + row * (iconSize + spacing);
+    int y = startY + row * (iconSize + rowSpacing);
     
     // App icon background
     uint16_t iconColor = apps[i].color;
@@ -894,22 +947,12 @@ void drawMenu() {
     drawAppGraphics(apps[i].mode, x, y, iconSize);
     
     // Icon symbol in TOP half
-    tft.setTextColor(THEME_BG, iconColor);
+    tft.setTextColor(TFT_BLACK, iconColor);
     tft.drawCentreString(apps[i].symbol, x + iconSize/2, y + iconSize/4, 2);
     
     // App name in BOTTOM half
-    tft.setTextColor(THEME_TEXT, iconColor);
+    tft.setTextColor(TFT_BLACK, iconColor);
     tft.drawCentreString(apps[i].name, x + iconSize/2, y + (3 * iconSize/4) - 4, 2);
-  }
-  
-  // Draw blank buttons in third row (black with white outline)
-  int blankRow = 2;
-  for (int col = 0; col < cols; col++) {
-    int x = startX + col * (iconSize + spacing);
-    int y = startY + blankRow * (iconSize + spacing);
-    
-    tft.fillRoundRect(x, y, iconSize, iconSize, 8, TFT_BLACK);
-    tft.drawRoundRect(x, y, iconSize, iconSize, 8, TFT_WHITE);
   }
 }
 
@@ -919,11 +962,11 @@ void drawAppGraphics(AppMode mode, int x, int y, int iconSize) {
   switch (mode) {
     case KEYBOARD: // KEYS - piano keys
       {
-        int keyWidth = 4;
-        int totalWidth = 5 * keyWidth + 4 * 1; // 5 keys + 4 gaps
+        int keyWidth = 8;
+        int totalWidth = 5 * keyWidth + 4 * 2; // 5 keys + 4 gaps
         int startX = x + (iconSize - totalWidth) / 2;
         for (int i = 0; i < 5; i++) {
-          tft.fillRect(startX + i*5, topHalfY - 6, keyWidth, 12, THEME_BG);
+          tft.fillRect(startX + i*10, topHalfY - 12, keyWidth, 24, THEME_BG);
         }
       }
       break;
@@ -965,32 +1008,32 @@ void drawAppGraphics(AppMode mode, int x, int y, int iconSize) {
     case RANDOM_GENERATOR: // RNG - random dots
       {
         int centerX = x + iconSize/2;
-        tft.fillCircle(centerX - 8, topHalfY - 6, 2, THEME_BG);
-        tft.fillCircle(centerX - 1, topHalfY - 3, 2, THEME_BG);
-        tft.fillCircle(centerX + 7, topHalfY + 1, 2, THEME_BG);
-        tft.fillCircle(centerX - 4, topHalfY + 6, 2, THEME_BG);
+        tft.fillCircle(centerX - 16, topHalfY - 12, 4, THEME_BG);
+        tft.fillCircle(centerX - 2, topHalfY - 6, 4, THEME_BG);
+        tft.fillCircle(centerX + 14, topHalfY + 2, 4, THEME_BG);
+        tft.fillCircle(centerX - 8, topHalfY + 12, 4, THEME_BG);
       }
       break;
     case XY_PAD: // XY PAD - crosshairs
       {
         int centerX = x + iconSize/2;
-        int crossSize = 14;
+        int crossSize = 28;
         tft.drawFastHLine(centerX - crossSize/2, topHalfY, crossSize, THEME_BG);
         tft.drawFastVLine(centerX, topHalfY - crossSize/2, crossSize, THEME_BG);
-        tft.fillCircle(centerX, topHalfY, 3, THEME_BG);
+        tft.fillCircle(centerX, topHalfY, 6, THEME_BG);
       }
       break;
     case ARPEGGIATOR: // ARP - ascending notes
       {
         int centerX = x + iconSize/2;
         for (int i = 0; i < 4; i++) {
-          tft.fillCircle(centerX - 7 + i*5, topHalfY + 5 - i*3, 2, THEME_BG);
+          tft.fillCircle(centerX - 14 + i*10, topHalfY + 10 - i*6, 4, THEME_BG);
         }
       }
       break;
     case GRID_PIANO: // GRID - grid pattern
       {
-        int cellW = 5, cellH = 4, gapX = 1, gapY = 2;
+        int cellW = 10, cellH = 8, gapX = 2, gapY = 4;
         int totalW = 4 * cellW + 3 * gapX;
         int totalH = 3 * cellH + 2 * gapY;
         int startX = x + (iconSize - totalW) / 2;
@@ -1005,10 +1048,10 @@ void drawAppGraphics(AppMode mode, int x, int y, int iconSize) {
     case AUTO_CHORD: // CHORD - stacked notes
       {
         int centerX = x + iconSize/2;
-        int lineWidth = 14;
-        tft.fillRect(centerX - lineWidth/2, topHalfY + 4, lineWidth, 2, THEME_BG);
-        tft.fillRect(centerX - lineWidth/2, topHalfY, lineWidth, 2, THEME_BG);
-        tft.fillRect(centerX - lineWidth/2, topHalfY - 4, lineWidth, 2, THEME_BG);
+        int lineWidth = 28;
+        tft.fillRect(centerX - lineWidth/2, topHalfY + 8, lineWidth, 4, THEME_BG);
+        tft.fillRect(centerX - lineWidth/2, topHalfY, lineWidth, 4, THEME_BG);
+        tft.fillRect(centerX - lineWidth/2, topHalfY - 8, lineWidth, 4, THEME_BG);
       }
       break;
     case LFO: // LFO - simple sine wave line
@@ -1016,13 +1059,13 @@ void drawAppGraphics(AppMode mode, int x, int y, int iconSize) {
         int centerX = x + iconSize/2;
         
         // Draw sine wave as connected line segments
-        int lastX = centerX - 15;
+        int lastX = centerX - 30;
         int lastY = topHalfY;
         
         for (int i = 1; i <= 15; i++) {
-          int px = centerX - 15 + i * 2;
+          int px = centerX - 30 + i * 4;
           float angle = (i * 3.14159) / 4.0; // One and a half cycles
-          int py = topHalfY + (int)(6 * sin(angle));
+          int py = topHalfY + (int)(12 * sin(angle));
           
           // Draw line from last point to current point
           tft.drawLine(lastX, lastY, px, py, THEME_BG);
@@ -1032,22 +1075,94 @@ void drawAppGraphics(AppMode mode, int x, int y, int iconSize) {
         }
       }
       break;
-    case TB3PO: // TB3PO - 303 style robot/sequencer
+    case TB3PO: // TB3PO - Acid smiley face (transparent outline)
       {
         int centerX = x + iconSize/2;
-        // Draw robot head/body
-        tft.fillRoundRect(centerX - 10, topHalfY - 8, 20, 16, 3, THEME_BG);
-        // Eyes (using icon color to match)
-        tft.fillCircle(centerX - 5, topHalfY - 3, 2, 0xF7BE); // Gold color from icon
-        tft.fillCircle(centerX + 5, topHalfY - 3, 2, 0xF7BE);
-        // Antennae
-        tft.drawLine(centerX - 6, topHalfY - 8, centerX - 8, topHalfY - 12, THEME_BG);
-        tft.drawLine(centerX + 6, topHalfY - 8, centerX + 8, topHalfY - 12, THEME_BG);
-        tft.fillCircle(centerX - 8, topHalfY - 12, 1, THEME_BG);
-        tft.fillCircle(centerX + 8, topHalfY - 12, 1, THEME_BG);
-        // Sequencer pattern (bottom)
+        // Draw circle face outline (2 pixels thick for visibility)
+        tft.drawCircle(centerX, topHalfY, 18, THEME_BG);
+        tft.drawCircle(centerX, topHalfY, 17, THEME_BG);
+        // Eyes (filled dots)
+        tft.fillCircle(centerX - 8, topHalfY - 5, 3, THEME_BG);
+        tft.fillCircle(centerX + 8, topHalfY - 5, 3, THEME_BG);
+        // Acid smiley mouth (wide smile - curves upward, thicker line)
+        for (int i = -10; i <= 10; i++) {
+          int y = topHalfY + 8 - (abs(i) * abs(i)) / 20;
+          tft.drawPixel(centerX + i, y, THEME_BG);
+          tft.drawPixel(centerX + i, y + 1, THEME_BG); // Make it thicker
+        }
+      }
+      break;
+    case GRIDS: // GRIDS - MI Grids drum pattern (concentric circles)
+      {
+        int centerX = x + iconSize/2;
+        // Draw concentric circles representing drum pattern map
+        tft.drawCircle(centerX, topHalfY, 16, THEME_BG);
+        tft.drawCircle(centerX, topHalfY, 10, THEME_BG);
+        tft.drawCircle(centerX, topHalfY, 4, THEME_BG);
+        // Draw dots representing triggers in different positions
+        tft.fillCircle(centerX, topHalfY - 10, 2, THEME_BG);
+        tft.fillCircle(centerX + 8, topHalfY + 6, 2, THEME_BG);
+        tft.fillCircle(centerX - 8, topHalfY + 6, 2, THEME_BG);
+      }
+      break;
+    case RAGA: // RAGA - Indian classical music (sitar/tanpura shape)
+      {
+        int centerX = x + iconSize/2;
+        // Draw sitar/tanpura body (gourd shape)
+        tft.fillCircle(centerX, topHalfY + 6, 12, THEME_BG);
+        // Neck
+        tft.fillRect(centerX - 2, topHalfY - 18, 4, 24, THEME_BG);
+        // Tuning pegs
+        tft.drawLine(centerX - 2, topHalfY - 16, centerX - 8, topHalfY - 18, THEME_BG);
+        tft.drawLine(centerX + 2, topHalfY - 16, centerX + 8, topHalfY - 18, THEME_BG);
+        // Strings (vertical lines)
+        tft.drawFastVLine(centerX - 4, topHalfY - 10, 16, THEME_BG);
+        tft.drawFastVLine(centerX, topHalfY - 10, 16, THEME_BG);
+        tft.drawFastVLine(centerX + 4, topHalfY - 10, 16, THEME_BG);
+        // Bridge
+        tft.drawFastHLine(centerX - 8, topHalfY + 10, 16, THEME_BG);
+      }
+      break;
+    case EUCLIDEAN: // EUCLIDEAN - Euclidean rhythm (multi-ring circular pattern)
+      {
+        int centerX = x + iconSize/2;
+        // Draw 4 concentric circles with dots (representing Euclidean patterns)
+        tft.drawCircle(centerX, topHalfY, 18, THEME_BG);
+        tft.drawCircle(centerX, topHalfY, 14, THEME_BG);
+        tft.drawCircle(centerX, topHalfY, 10, THEME_BG);
+        tft.drawCircle(centerX, topHalfY, 6, THEME_BG);
+        // Event markers at different positions on each ring
+        // Outer ring - 4 events
         for (int i = 0; i < 4; i++) {
-          tft.drawRect(centerX - 10 + i*5, topHalfY + 4, 4, 3, THEME_BG);
+          float angle = (i * TWO_PI / 4) - HALF_PI;
+          tft.fillCircle(centerX + cos(angle) * 18, topHalfY + sin(angle) * 18, 2, THEME_BG);
+        }
+        // Mid-outer ring - 3 events
+        for (int i = 0; i < 3; i++) {
+          float angle = (i * TWO_PI / 3) - HALF_PI + 0.5;
+          tft.fillCircle(centerX + cos(angle) * 14, topHalfY + sin(angle) * 14, 2, THEME_BG);
+        }
+        // Center dot
+        tft.fillCircle(centerX, topHalfY, 2, THEME_BG);
+      }
+      break;
+    case MORPH: // MORPH - Gesture morphing (infinity symbol with trail)
+      {
+        int centerX = x + iconSize/2;
+        // Draw infinity symbol (lemniscate)
+        for (float t = 0; t < TWO_PI; t += 0.1) {
+          float scale = 16.0f;
+          float ix = scale * cos(t) / (1 + sin(t) * sin(t));
+          float iy = scale * sin(t) * cos(t) / (1 + sin(t) * sin(t));
+          tft.drawPixel(centerX + (int)ix, topHalfY + (int)iy, THEME_BG);
+        }
+        // Add flowing particles
+        for (int i = 0; i < 3; i++) {
+          float t = (millis() / 500.0f + i * TWO_PI / 3.0f);
+          float scale = 16.0f;
+          float px = scale * cos(t) / (1 + sin(t) * sin(t));
+          float py = scale * sin(t) * cos(t) / (1 + sin(t) * sin(t));
+          tft.fillCircle(centerX + (int)px, topHalfY + (int)py, 2, THEME_BG);
         }
       }
       break;
@@ -1094,16 +1209,17 @@ void handleMenuTouch() {
   }
   
   int iconSize = 85;  // Match drawMenu icon size (updated for better touch)
-  int spacing = 10;   // Match drawMenu spacing
+  int spacing = 5;    // Match drawMenu spacing (reduced)
+  int rowSpacing = 2; // Match drawMenu row spacing
   int cols = 5;       // 5 icons per row
   int startX = (480 - (cols * iconSize + (cols-1) * spacing)) / 2;
-  int startY = 60;    // Match drawMenu startY
+  int startY = 58;    // Match drawMenu startY
   
   for (int i = 0; i < numApps; i++) {
     int col = i % cols;
     int row = i / cols;
     int x = startX + col * (iconSize + spacing);
-    int y = startY + row * (iconSize + spacing);
+    int y = startY + row * (iconSize + rowSpacing);
     
     if (isButtonPressed(x, y, iconSize, iconSize)) {
       Serial.printf("Menu touch: app %d (%s) at (%d,%d) touch=(%d,%d)\n", 
@@ -1152,6 +1268,18 @@ void enterMode(AppMode mode) {
       break;
     case TB3PO:
       initializeTB3POMode();
+      break;
+    case GRIDS:
+      initializeGridsMode();
+      break;
+    case RAGA:
+      initializeRagaMode();
+      break;
+    case EUCLIDEAN:
+      initializeEuclideanMode();
+      break;
+    case MORPH:
+      initializeMorphMode();
       break;
   }
   updateStatus();

@@ -155,10 +155,13 @@ static bool stepIsAccent(int stepNum) {
 }
 
 void initializeTB3POMode() {
+  Serial.println("\n=== TB-3PO Mode Initialization ===");
+  
   tb3po.step = 0;
   tb3po.playing = false;
   tb3po.currentNote = -1;
   tb3po.lastStepTime = 0;
+  tb3po.readyForInput = false; // Wait for touch release before accepting input
   tb3po.density = 7;
   tb3po.scaleIndex = 0; // Major scale
   tb3po.rootNote = 0;   // C
@@ -168,10 +171,18 @@ void initializeTB3POMode() {
   tb3po.bpm = 120.0;
   tb3po.useInternalClock = true;
   
+  Serial.printf("BPM: %.1f, Steps: %d, Density: %d\n", tb3po.bpm, tb3po.numSteps, tb3po.density);
+  
   regenerateAll();
+  
+  Serial.printf("Seed: 0x%04X, Gates: 0x%04X, Slides: 0x%04X, Accents: 0x%04X\n",
+                tb3po.seed, tb3po.gates, tb3po.slides, tb3po.accents);
   
   tft.fillScreen(THEME_BG);
   drawHeader("TB-3PO");
+  drawTB3POMode();
+  
+  Serial.println("TB-3PO initialized and drawn");
 }
 
 void drawTB3POMode() {
@@ -249,10 +260,10 @@ void drawTB3POMode() {
   
   y += stepHeight + 20;
   
-  // Control buttons
+  // Control buttons - positioned at very bottom with larger size
   int btnW = 90;
-  int btnH = 45;
-  int btnY = SCREEN_HEIGHT - btnH - 10;
+  int btnH = 60;
+  int btnY = 260;  // Position to catch touches around y=290-320
   
   drawRoundButton(10, btnY, btnW, btnH, tb3po.playing ? "STOP" : "PLAY", THEME_PRIMARY, THEME_TEXT);
   drawRoundButton(110, btnY, btnW, btnH, "REGEN", THEME_SECONDARY, THEME_TEXT);
@@ -261,11 +272,57 @@ void drawTB3POMode() {
   drawRoundButton(410, btnY, 60, btnH, "<<", THEME_TEXT_DIM, THEME_TEXT);
 }
 
+// Efficient update of just the step visualization
+void updateTB3POSteps() {
+  int y = CONTENT_TOP + 135;  // Position matching drawTB3POMode
+  int stepWidth = 28;
+  int stepHeight = 40;
+  int startX = 10;
+  
+  for (int i = 0; i < tb3po.numSteps; i++) {
+    int x = startX + (i * stepWidth);
+    
+    bool isCurrentStep = (i == tb3po.step && tb3po.playing);
+    bool isGated = stepIsGated(i);
+    bool isSlid = stepIsSlid(i);
+    bool isAccent = stepIsAccent(i);
+    
+    // Step box
+    uint16_t boxColor = isCurrentStep ? THEME_PRIMARY : THEME_SURFACE;
+    if (!isGated) boxColor = THEME_TEXT_DIM;
+    
+    tft.fillRoundRect(x, y, stepWidth - 2, stepHeight, 3, boxColor);
+    
+    // Accent indicator (top)
+    if (isAccent && isGated) {
+      tft.fillCircle(x + stepWidth/2 - 1, y + 5, 3, THEME_WARNING);
+    }
+    
+    // Slide indicator (bottom)
+    if (isSlid && isGated) {
+      tft.fillRect(x + 2, y + stepHeight - 6, stepWidth - 6, 4, THEME_ACCENT);
+    }
+    
+    // Step number
+    tft.setTextColor(isCurrentStep ? THEME_BG : THEME_TEXT, boxColor);
+    tft.drawString(String(i + 1), x + (stepWidth/2) - 6, y + stepHeight/2 - 4, 1);
+  }
+}
+
 void handleTB3POMode() {
   updateTouch();
   
-  int btnH = 45;
-  int btnY = SCREEN_HEIGHT - btnH - 10;
+  // Wait for initial touch release before accepting button input
+  if (!tb3po.readyForInput) {
+    if (!touch.isPressed) {
+      tb3po.readyForInput = true;
+      Serial.println("TB3PO ready for input");
+    }
+    // Still handle playback timing even during wait
+  }
+  
+  int btnH = 60;
+  int btnY = 260;  // Position to catch touches around y=290-320
   
   // Handle playback timing
   if (tb3po.playing && tb3po.useInternalClock) {
@@ -277,9 +334,14 @@ void handleTB3POMode() {
     if (now - tb3po.lastStepTime >= tb3po.stepInterval) {
       tb3po.lastStepTime = now;
       
+      Serial.printf("TB3PO Step %d: gate=%d accent=%d slide=%d\n", 
+                    tb3po.step, stepIsGated(tb3po.step), 
+                    stepIsAccent(tb3po.step), stepIsSlid(tb3po.step));
+      
       // Stop previous note if playing
       if (tb3po.currentNote >= 0) {
         sendMIDI(0x80, tb3po.currentNote, 0);
+        Serial.printf("  Note OFF: %d\n", tb3po.currentNote);
         tb3po.currentNote = -1;
       }
       
@@ -288,6 +350,7 @@ void handleTB3POMode() {
         int note = getMIDINoteForStep(tb3po.step);
         int velocity = stepIsAccent(tb3po.step) ? 127 : 100;
         
+        Serial.printf("  Note ON: %d vel=%d\n", note, velocity);
         sendMIDI(0x90, note, velocity);
         tb3po.currentNote = note;
       }
@@ -298,13 +361,25 @@ void handleTB3POMode() {
         tb3po.step = 0;
       }
       
-      drawTB3POMode();
+      updateTB3POSteps();  // Only redraw step indicators, not entire screen
     }
   }
   
-  if (touch.justPressed) {
+  // Debug touch state changes only
+  static bool lastTouchState = false;
+  if (touch.isPressed && !lastTouchState) {
+    Serial.printf("TB3PO touch DOWN: justPressed=%d ready=%d at (%d,%d)\n", 
+                  touch.justPressed, tb3po.readyForInput, touch.x, touch.y);
+  }
+  lastTouchState = touch.isPressed;
+  
+  // Only process button presses after initial touch release
+  if (touch.justPressed && tb3po.readyForInput) {
+    Serial.printf("TB3PO JUST PRESSED at: (%d,%d)\n", touch.x, touch.y);
+    
     // Play/Stop button
     if (isButtonPressed(10, btnY, 90, btnH)) {
+      Serial.printf("PLAY/STOP pressed. Was playing: %d\n", tb3po.playing);
       tb3po.playing = !tb3po.playing;
       if (!tb3po.playing && tb3po.currentNote >= 0) {
         sendMIDI(0x80, tb3po.currentNote, 0);
@@ -312,16 +387,21 @@ void handleTB3POMode() {
       }
       if (tb3po.playing) {
         tb3po.lastStepTime = millis();
+        Serial.printf("Now playing. Step interval: %lu ms\n", tb3po.stepInterval);
+      } else {
+        Serial.println("Stopped");
       }
       drawTB3POMode();
     }
     // Regenerate button
     else if (isButtonPressed(110, btnY, 90, btnH)) {
+      Serial.println("REGEN pressed");
       regenerateAll();
       drawTB3POMode();
     }
     // Seed lock button
     else if (isButtonPressed(210, btnY, 90, btnH)) {
+      Serial.printf("SEED pressed. Locked: %d -> %d\n", tb3po.lockSeed, !tb3po.lockSeed);
       tb3po.lockSeed = !tb3po.lockSeed;
       if (!tb3po.lockSeed) {
         reseed();
@@ -331,6 +411,7 @@ void handleTB3POMode() {
     }
     // Scale button
     else if (isButtonPressed(310, btnY, 90, btnH)) {
+      Serial.printf("SCALE pressed. Index: %d -> %d\n", tb3po.scaleIndex, (tb3po.scaleIndex + 1) % NUM_SCALES);
       tb3po.scaleIndex++;
       if (tb3po.scaleIndex >= NUM_SCALES) {
         tb3po.scaleIndex = 0;
@@ -340,6 +421,7 @@ void handleTB3POMode() {
     }
     // Back button
     else if (isButtonPressed(410, btnY, 60, btnH)) {
+      Serial.println("BACK pressed");
       if (tb3po.currentNote >= 0) {
         sendMIDI(0x80, tb3po.currentNote, 0);
       }
@@ -349,6 +431,7 @@ void handleTB3POMode() {
     }
     // Density control (tap on density display area)
     else if (isButtonPressed(300, CONTENT_TOP + 30, 150, 20)) {
+      Serial.printf("DENSITY pressed: %d -> %d\n", tb3po.density, (tb3po.density + 1) % 15);
       tb3po.density++;
       if (tb3po.density > 14) tb3po.density = 0;
       applyDensity();
@@ -356,16 +439,21 @@ void handleTB3POMode() {
     }
     // BPM control
     else if (isButtonPressed(10, CONTENT_TOP + 30, 120, 20)) {
-      tb3po.bpm += 10;
-      if (tb3po.bpm > TB3PO_MAX_BPM) tb3po.bpm = TB3PO_MIN_BPM;
+      float newBpm = tb3po.bpm + 10;
+      if (newBpm > TB3PO_MAX_BPM) newBpm = TB3PO_MIN_BPM;
+      Serial.printf("BPM pressed: %.1f -> %.1f\n", tb3po.bpm, newBpm);
+      tb3po.bpm = newBpm;
       drawTB3POMode();
     }
     // Root note control
     else if (isButtonPressed(250, CONTENT_TOP + 60, 80, 20)) {
+      Serial.printf("ROOT pressed: %d -> %d\n", tb3po.rootNote, (tb3po.rootNote + 1) % 12);
       tb3po.rootNote++;
       if (tb3po.rootNote > 11) tb3po.rootNote = 0;
       regenerateAll();
       drawTB3POMode();
+    } else {
+      Serial.println("TB3PO touch - no button hit");
     }
   }
 }
