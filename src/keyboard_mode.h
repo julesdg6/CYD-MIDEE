@@ -14,6 +14,14 @@ int keyboardKey = 0;  // Key signature (C=0, C#=1, D=2, etc.)
 int lastKey = -1;
 int lastRow = -1;
 
+// Control buttons
+Button keyboardBtnOctDown;
+Button keyboardBtnOctUp;
+Button keyboardBtnScale;
+Button keyboardBtnKeyDown;
+Button keyboardBtnKeyUp;
+Button keyboardBtnMenu;
+
 // Function declarations
 void initializeKeyboardMode();
 void drawKeyboardMode();
@@ -28,6 +36,33 @@ void initializeKeyboardMode() {
   keyboardKey = 0;
   lastKey = -1;
   lastRow = -1;
+  
+  // Initialize control buttons with responsive positioning
+  int btnY = 240;
+  int btnH = 45;
+  keyboardBtnOctDown.setBounds(10, btnY, 60, btnH);
+  keyboardBtnOctDown.setText("OCT-");
+  keyboardBtnOctDown.setColor(THEME_SECONDARY);
+  
+  keyboardBtnOctUp.setBounds(80, btnY, 60, btnH);
+  keyboardBtnOctUp.setText("OCT+");
+  keyboardBtnOctUp.setColor(THEME_SECONDARY);
+  
+  keyboardBtnScale.setBounds(150, btnY, 80, btnH);
+  keyboardBtnScale.setText("SCALE");
+  keyboardBtnScale.setColor(THEME_ACCENT);
+  
+  keyboardBtnKeyDown.setBounds(240, btnY, 60, btnH);
+  keyboardBtnKeyDown.setText("KEY-");
+  keyboardBtnKeyDown.setColor(THEME_WARNING);
+  
+  keyboardBtnKeyUp.setBounds(310, btnY, 60, btnH);
+  keyboardBtnKeyUp.setText("KEY+");
+  keyboardBtnKeyUp.setColor(THEME_WARNING);
+  
+  keyboardBtnMenu.setBounds(380, btnY, 90, btnH);
+  keyboardBtnMenu.setText("MENU");
+  keyboardBtnMenu.setColor(THEME_PRIMARY);
 }
 
 void drawKeyboardMode() {
@@ -46,15 +81,13 @@ void drawKeyboardMode() {
     }
   }
   
-  // Control layout - larger buttons at bottom
-  int btnY = 240;  // Lower position
-  int btnH = 45;   // Taller buttons (was 25)
-  drawRoundButton(10, btnY, 60, btnH, "OCT-", THEME_SECONDARY);
-  drawRoundButton(80, btnY, 60, btnH, "OCT+", THEME_SECONDARY);
-  drawRoundButton(150, btnY, 80, btnH, "SCALE", THEME_ACCENT);
-  drawRoundButton(240, btnY, 60, btnH, "KEY-", THEME_WARNING);
-  drawRoundButton(310, btnY, 60, btnH, "KEY+", THEME_WARNING);
-  drawRoundButton(380, btnY, 90, btnH, "MENU", THEME_PRIMARY);
+  // Control layout - draw buttons with initial state
+  keyboardBtnOctDown.draw(true);
+  keyboardBtnOctUp.draw(true);
+  keyboardBtnScale.draw(true);
+  keyboardBtnKeyDown.draw(true);
+  keyboardBtnKeyUp.draw(true);
+  keyboardBtnMenu.draw(true);
   
   // Status display
   tft.setTextColor(THEME_TEXT_DIM, THEME_BG);
@@ -90,28 +123,36 @@ void handleKeyboardMode() {
     return;
   }
   
+  // Update button visual states
+  keyboardBtnOctDown.draw();
+  keyboardBtnOctUp.draw();
+  keyboardBtnScale.draw();
+  keyboardBtnKeyDown.draw();
+  keyboardBtnKeyUp.draw();
+  keyboardBtnMenu.draw();
+  
   if (touch.justPressed) {
-    if (isButtonPressed(10, 240, 60, 45)) {
+    if (keyboardBtnOctDown.justPressed()) {
       keyboardOctave = max(1, keyboardOctave - 1);
       drawKeyboardMode();
       return;
     }
-    if (isButtonPressed(80, 240, 60, 45)) {
+    if (keyboardBtnOctUp.justPressed()) {
       keyboardOctave = min(8, keyboardOctave + 1);
       drawKeyboardMode();
       return;
     }
-    if (isButtonPressed(150, 240, 80, 45)) {
+    if (keyboardBtnScale.justPressed()) {
       keyboardScale = (keyboardScale + 1) % NUM_SCALES;
       drawKeyboardMode();
       return;
     }
-    if (isButtonPressed(240, 240, 60, 45)) {
+    if (keyboardBtnKeyDown.justPressed()) {
       keyboardKey = (keyboardKey - 1 + 12) % 12;
       drawKeyboardMode();
       return;
     }
-    if (isButtonPressed(310, 240, 60, 45)) {
+    if (keyboardBtnKeyUp.justPressed()) {
       keyboardKey = (keyboardKey + 1) % 12;
       drawKeyboardMode();
       return;

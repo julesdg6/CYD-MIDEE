@@ -15,6 +15,13 @@ unsigned long noteOffTime[SEQ_TRACKS] = {0};
 int stepInterval;
 bool sequencerPlaying = false;
 
+// Control buttons
+Button seqBtnPlayStop;
+Button seqBtnClear;
+Button seqBtnBpmDown;
+Button seqBtnBpmUp;
+Button seqBtnMenu;
+
 // Function declarations
 void initializeSequencerMode();
 void drawSequencerMode();
@@ -36,6 +43,29 @@ void initializeSequencerMode() {
       sequencePattern[t][s] = false;
     }
   }
+  
+  // Initialize control buttons
+  int btnY = 245;
+  int btnH = 45;
+  seqBtnPlayStop.setBounds(10, btnY, 70, btnH);
+  seqBtnPlayStop.setText(sequencerPlaying ? "STOP" : "PLAY");
+  seqBtnPlayStop.setColor(sequencerPlaying ? THEME_ERROR : THEME_SUCCESS);
+  
+  seqBtnClear.setBounds(90, btnY, 70, btnH);
+  seqBtnClear.setText("CLEAR");
+  seqBtnClear.setColor(THEME_WARNING);
+  
+  seqBtnBpmDown.setBounds(170, btnY, 60, btnH);
+  seqBtnBpmDown.setText("BPM-");
+  seqBtnBpmDown.setColor(THEME_SECONDARY);
+  
+  seqBtnBpmUp.setBounds(240, btnY, 60, btnH);
+  seqBtnBpmUp.setText("BPM+");
+  seqBtnBpmUp.setColor(THEME_SECONDARY);
+  
+  seqBtnMenu.setBounds(380, btnY, 90, btnH);
+  seqBtnMenu.setText("MENU");
+  seqBtnMenu.setColor(THEME_PRIMARY);
 }
 
 void drawSequencerMode() {
@@ -46,15 +76,14 @@ void drawSequencerMode() {
   
   drawSequencerGrid();
   
-  // Transport controls - larger buttons at bottom
-  int btnY = 245;
-  int btnH = 45;
-  drawRoundButton(10, btnY, 70, btnH, sequencerPlaying ? "STOP" : "PLAY", 
-                 sequencerPlaying ? THEME_ERROR : THEME_SUCCESS);
-  drawRoundButton(90, btnY, 70, btnH, "CLEAR", THEME_WARNING);
-  drawRoundButton(170, btnY, 60, btnH, "BPM-", THEME_SECONDARY);
-  drawRoundButton(240, btnY, 60, btnH, "BPM+", THEME_SECONDARY);
-  drawRoundButton(380, btnY, 90, btnH, "MENU", THEME_PRIMARY);
+  // Transport controls - draw buttons with initial state
+  seqBtnPlayStop.setText(sequencerPlaying ? "STOP" : "PLAY");
+  seqBtnPlayStop.setColor(sequencerPlaying ? THEME_ERROR : THEME_SUCCESS);
+  seqBtnPlayStop.draw(true);
+  seqBtnClear.draw(true);
+  seqBtnBpmDown.draw(true);
+  seqBtnBpmUp.draw(true);
+  seqBtnMenu.draw(true);
   
   // BPM display
   tft.setTextColor(THEME_TEXT, THEME_BG);
@@ -115,10 +144,17 @@ void handleSequencerMode() {
     return;
   }
   
+  // Update button visual states
+  seqBtnPlayStop.draw();
+  seqBtnClear.draw();
+  seqBtnBpmDown.draw();
+  seqBtnBpmUp.draw();
+  seqBtnMenu.draw();
+  
   // Handle touch input
   if (touch.justPressed) {
     // Transport controls
-    if (isButtonPressed(10, 245, 60, 45)) {
+    if (seqBtnPlayStop.justPressed()) {
       sequencerPlaying = !sequencerPlaying;
       if (sequencerPlaying) {
         currentStep = 0;
@@ -128,7 +164,7 @@ void handleSequencerMode() {
       return;
     }
     
-    if (isButtonPressed(80, 245, 60, 45)) {
+    if (seqBtnClear.justPressed()) {
       // Clear all patterns
       for (int t = 0; t < SEQ_TRACKS; t++) {
         for (int s = 0; s < SEQ_STEPS; s++) {
@@ -139,7 +175,7 @@ void handleSequencerMode() {
       return;
     }
     
-    if (isButtonPressed(150, 245, 60, 45)) {
+    if (seqBtnBpmDown.justPressed()) {
       float newBpm = max(60.0f, globalState.bpm - 1.0f);
       setBPM(newBpm);
       stepInterval = 60000 / (int)globalState.bpm / 4;
@@ -147,7 +183,7 @@ void handleSequencerMode() {
       return;
     }
     
-    if (isButtonPressed(220, 245, 60, 45)) {
+    if (seqBtnBpmUp.justPressed()) {
       float newBpm = min(200.0f, globalState.bpm + 1.0f);
       setBPM(newBpm);
       stepInterval = 60000 / (int)globalState.bpm / 4;
