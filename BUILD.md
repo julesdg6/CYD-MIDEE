@@ -184,13 +184,6 @@ pio run --target clean
 pio run -e cyd35
 ```
 
-## Clean Build
-If you encounter strange errors, try a clean build:
-```bash
-pio run --target clean
-pio run
-```
-
 ## Library Dependencies
 Automatically managed by PlatformIO:
 - **TFT_eSPI** @ 2.5.43 - Display driver
