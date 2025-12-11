@@ -225,8 +225,8 @@ The following ESP32 GPIO pins are **not used** by the current hardware configura
 
 **Notes on Available Pins:**
 - GPIO16/17 are ideal for UART2-based serial MIDI implementation
-- GPIO34-39 are input-only pins (cannot drive outputs)
-- GPIO22/21 can be used for I2C devices (SDA/SCL)
+- GPIO34, GPIO35, GPIO36, GPIO39 are input-only pins (cannot drive outputs)
+- GPIO22 can be used for I2C SCL (GPIO21 is backlight on 2.8"/2.4" boards, but available as I2C SDA on 3.5" boards)
 - Some pins may have pull-up/down resistors on the CYD board - verify with multimeter before use
 
 ### Serial MIDI Expansion Planning
