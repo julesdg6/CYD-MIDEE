@@ -41,6 +41,7 @@ struct GlobalState {
   bool isPlaying = false;
   unsigned long lastBeatTime = 0;
   int currentMidiChannel = 1;  // 1-16
+  bool bleConnected = false;  // Centralized BLE connection state
 };
 extern GlobalState globalState;
 
@@ -133,7 +134,7 @@ struct Scale {
 extern TFT_eSPI tft;
 extern XPT2046_Touchscreen ts;
 extern BLECharacteristic *pCharacteristic;
-extern bool deviceConnected;
+// BLE connection state now in GlobalState (globalState.bleConnected)
 extern uint8_t midiPacket[];
 extern TouchState touch;
 extern AppMode currentMode;

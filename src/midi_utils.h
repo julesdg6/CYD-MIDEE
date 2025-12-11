@@ -11,9 +11,9 @@ extern bool bleEnabled;
 extern const Scale scales[];
 extern const int NUM_SCALES;
 
-// MIDI utility functions (sendMIDI kept inline for performance)
+// Legacy MIDI utility functions (kept for backward compatibility)
 inline void sendMIDI(byte cmd, byte note, byte vel) {
-  if (!deviceConnected) return;
+  if (!globalState.bleConnected) return;
   
   // Apply MIDI channel (channels 1-16 are encoded as 0-15 in the lower nibble)
   byte channelCmd = (cmd & 0xF0) | ((midiChannel - 1) & 0x0F);
@@ -25,10 +25,37 @@ inline void sendMIDI(byte cmd, byte note, byte vel) {
   pCharacteristic->notify();
 }
 
+// Threaded MIDI functions (preferred - use these for new code)
+inline void sendNoteOn(uint8_t note, uint8_t velocity = 127) {
+  MIDIThread::sendNoteOn(note, velocity);
+}
+
+inline void sendNoteOff(uint8_t note, uint8_t velocity = 0) {
+  MIDIThread::sendNoteOff(note, velocity);
+}
+
+inline void sendControlChange(uint8_t controller, uint8_t value) {
+  MIDIThread::sendCC(controller, value);
+}
+
+inline void sendPitchBend(int16_t value) {
+  MIDIThread::sendPitchBend(value);
+}
+
+inline void setBPM(float bpm) {
+  MIDIThread::setBPM(bpm);
+  globalState.bpm = bpm;
+  midiClock.calculatedBPM = bpm;  // Sync legacy struct
+}
+
+inline float getBPM() {
+  return MIDIThread::getBPM();
+}
+
 inline void stopAllModes() {
-  // Stop all MIDI notes
+  // Stop all MIDI notes using threaded system
   for (int i = 0; i < 128; i++) {
-    sendMIDI(0x80, i, 0);
+    MIDIThread::sendNoteOff(i, 0);
   }
 }
 

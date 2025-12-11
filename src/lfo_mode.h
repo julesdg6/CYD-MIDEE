@@ -306,7 +306,7 @@ float calculateLFOValue() {
 }
 
 void sendLFOValue(int value) {
-  if (!deviceConnected) return;
+  if (!globalState.bleConnected) return;
   
   if (lfo.pitchWheelMode) {
     // Send pitchwheel (14-bit value already calculated)
@@ -321,7 +321,7 @@ void sendLFOValue(int value) {
     pCharacteristic->notify();
   } else {
     // Send regular CC
-    sendMIDI(0xB0, lfo.ccTarget, value);
+    sendControlChange(lfo.ccTarget, value);
   }
 }
 

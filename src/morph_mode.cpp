@@ -254,12 +254,12 @@ void generateMIDIFromGesture(const GesturePoint& point) {
   velocity = constrain(velocity, 1, 127);
   
   // Send note
-  sendMIDI(0x90, pitch, velocity);
-  sendMIDI(0x80, pitch, 0); // Immediate note off for percussive feel
+  sendNoteOn(pitch, velocity);
+  sendNoteOff(pitch); // Immediate note off for percussive feel
   
   // Send CC based on X position (e.g., CC74 for filter)
   int ccValue = (int)(point.x * 127);
-  sendMIDI(0xB0, 74, ccValue);
+  sendControlChange(74, ccValue);
 }
 
 void initializeMorphMode() {
@@ -543,8 +543,8 @@ void handleMorphMode() {
       drawMorphMode();
     }
     
-    // Back
-    else if (touchX >= 435 && touchX <= 475 && touchY >= 5 && touchY <= 35) {
+    // Back - larger touch area
+    else if (touchX >= 425 && touchX <= 475 && touchY >= 5 && touchY <= 40) {
       currentMode = MENU;
       return;
     }

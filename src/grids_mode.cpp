@@ -209,16 +209,16 @@ void handleGridsMode() {
       
       // Send MIDI notes
       if (kickTrigger) {
-        sendMIDI(0x90, grids.kickNote, kickVel);
-        sendMIDI(0x80, grids.kickNote, 0); // Immediate note off for drums
+        sendNoteOn(grids.kickNote, kickVel);
+        sendNoteOff(grids.kickNote); // Immediate note off for drums
       }
       if (snareTrigger) {
-        sendMIDI(0x90, grids.snareNote, snareVel);
-        sendMIDI(0x80, grids.snareNote, 0);
+        sendNoteOn(grids.snareNote, snareVel);
+        sendNoteOff(grids.snareNote);
       }
       if (hatTrigger) {
-        sendMIDI(0x90, grids.hatNote, hatVel);
-        sendMIDI(0x80, grids.hatNote, 0);
+        sendNoteOn(grids.hatNote, hatVel);
+        sendNoteOff(grids.hatNote);
       }
       
       // Advance step

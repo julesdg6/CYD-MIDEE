@@ -12,7 +12,6 @@ bool sequencePattern[SEQ_TRACKS][SEQ_STEPS];
 int currentStep = 0;
 unsigned long lastStepTime = 0;
 unsigned long noteOffTime[SEQ_TRACKS] = {0};
-int bpm = 120;
 int stepInterval;
 bool sequencerPlaying = false;
 
@@ -27,8 +26,7 @@ void playSequencerStep();
 
 // Implementations
 void initializeSequencerMode() {
-  bpm = 120;
-  stepInterval = 60000 / bpm / 4; // 16th notes
+  stepInterval = 60000 / (int)globalState.bpm / 4; // 16th notes
   sequencerPlaying = false;
   currentStep = 0;
   
@@ -63,7 +61,7 @@ void drawSequencerMode() {
   if (midiClock.isReceiving) {
     tft.drawString(String((int)midiClock.calculatedBPM) + " [EXT]", 310, btnY + 15, 2);
   } else {
-    tft.drawString(String(bpm), 310, btnY + 15, 2);
+    tft.drawString(String((int)globalState.bpm), 310, btnY + 15, 2);
   }
 }
 
@@ -142,15 +140,17 @@ void handleSequencerMode() {
     }
     
     if (isButtonPressed(150, 245, 60, 45)) {
-      bpm = max(60, bpm - 1);
-      stepInterval = 60000 / bpm / 4;
+      float newBpm = max(60.0f, globalState.bpm - 1.0f);
+      setBPM(newBpm);
+      stepInterval = 60000 / (int)globalState.bpm / 4;
       drawSequencerMode();
       return;
     }
     
     if (isButtonPressed(220, 245, 60, 45)) {
-      bpm = min(200, bpm + 1);
-      stepInterval = 60000 / bpm / 4;
+      float newBpm = min(200.0f, globalState.bpm + 1.0f);
+      setBPM(newBpm);
+      stepInterval = 60000 / (int)globalState.bpm / 4;
       drawSequencerMode();
       return;
     }
@@ -193,7 +193,7 @@ void updateSequencer() {
   int drumNotes[] = {36, 38, 42, 46};
   for (int track = 0; track < SEQ_TRACKS; track++) {
     if (noteOffTime[track] > 0 && now >= noteOffTime[track]) {
-      sendMIDI(0x80, drumNotes[track], 0);
+      sendNoteOff(drumNotes[track]);
       noteOffTime[track] = 0;
     }
   }
@@ -224,7 +224,7 @@ void updateSequencer() {
 }
 
 void playSequencerStep() {
-  if (!deviceConnected) return;
+  if (!globalState.bleConnected) return;
   
   int drumNotes[] = {36, 38, 42, 46}; // Kick, Snare, Hi-hat, Open Hi-hat
   int noteLengths[] = {200, 150, 50, 300}; // Note lengths in ms
@@ -234,7 +234,7 @@ void playSequencerStep() {
   for (int track = 0; track < SEQ_TRACKS; track++) {
     if (sequencePattern[track][currentStep]) {
       // Turn on note
-      sendMIDI(0x90, drumNotes[track], 100);
+      sendNoteOn(drumNotes[track], 100);
       // Schedule note off
       noteOffTime[track] = now + noteLengths[track];
     }

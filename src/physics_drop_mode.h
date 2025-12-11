@@ -304,9 +304,10 @@ void updatePhysics() {
       dropBalls[i].vy = -dropBalls[i].vy * dropBalls[i].bounce;
       
       // Ground hit - play note
-      if (deviceConnected && abs(dropBalls[i].vy) > 1) {
-        sendMIDI(0x90, dropBalls[i].note, random(60, 100));
-        sendMIDI(0x80, dropBalls[i].note, 0);
+      if (abs(dropBalls[i].vy) > 1) {
+        int velocity = random(60, 100);
+        sendNoteOn(dropBalls[i].note, velocity);
+        sendNoteOff(dropBalls[i].note);
       }
     }
   }
@@ -339,9 +340,10 @@ void checkPlatformCollisions() {
         dropBalls[b].vx += platforms[p].angle * 1.5; // Platform angle affects bounce
         
         // Play platform note
-        if (deviceConnected && !platforms[p].active) {
-          sendMIDI(0x90, platforms[p].note, random(70, 110));
-          sendMIDI(0x80, platforms[p].note, 0);
+        if (!platforms[p].active) {
+          int velocity = random(70, 110);
+          sendNoteOn(platforms[p].note, velocity);
+          sendNoteOff(platforms[p].note);
           
           platforms[p].active = true;
           platforms[p].activeTime = millis();

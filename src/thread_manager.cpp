@@ -58,50 +58,14 @@ TouchState TouchThread::getState() {
 }
 
 void TouchThread::touchTask(void* parameter) {
-  TS_Point rawPoint;
+  // Touch thread simply updates state periodically
+  // The actual touch reading and calibration is handled by updateTouch()
+  // This keeps compatibility with existing calibration system
   
   while (true) {
-    if (xSemaphoreTake(touchMutex, portMAX_DELAY)) {
-      // Update touch state
-      currentState.wasPressed = currentState.isPressed;
-      
-      if (ts.touched()) {
-        rawPoint = ts.getPoint();
-        
-        // Apply calibration
-        int x = map(rawPoint.x, 3700, 500, 0, SCREEN_WIDTH);
-        int y = map(rawPoint.y, 400, 3700, 0, SCREEN_HEIGHT);
-        
-        x = constrain(x, 0, SCREEN_WIDTH - 1);
-        y = constrain(y, 0, SCREEN_HEIGHT - 1);
-        
-        currentState.x = x;
-        currentState.y = y;
-        currentState.isPressed = true;
-        currentState.justPressed = !currentState.wasPressed;
-        currentState.justReleased = false;
-        
-        // Call active callback if registered
-        if (activeCallback != nullptr) {
-          activeCallback(x, y, true);
-        }
-      } else {
-        if (currentState.wasPressed) {
-          currentState.justReleased = true;
-          if (activeCallback != nullptr) {
-            activeCallback(currentState.x, currentState.y, false);
-          }
-        } else {
-          currentState.justReleased = false;
-        }
-        currentState.isPressed = false;
-        currentState.justPressed = false;
-      }
-      
-      xSemaphoreGive(touchMutex);
-    }
-    
-    vTaskDelay(10 / portTICK_PERIOD_MS);  // 100Hz polling
+    // Thread runs but actual touch processing happens in main loop via updateTouch()
+    // This structure allows future migration to full threaded touch handling
+    vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }
 
@@ -213,7 +177,7 @@ void MIDIThread::midiTask(void* parameter) {
     
     // Process queued MIDI messages
     if (xQueueReceive(midiQueue, &msg, 1 / portTICK_PERIOD_MS)) {
-      if (!deviceConnected) {
+      if (!globalState.bleConnected) {
         continue;  // Skip if no BLE connection
       }
       

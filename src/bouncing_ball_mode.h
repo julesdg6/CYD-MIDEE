@@ -354,10 +354,9 @@ void checkWallCollisions() {
       }
       
       if (collision) {
-        if (deviceConnected) {
-          sendMIDI(0x90, walls[w].note, random(70, 110));
-          sendMIDI(0x80, walls[w].note, 0);
-        }
+        int velocity = random(70, 110);
+        sendNoteOn(walls[w].note, velocity);
+        sendNoteOff(walls[w].note);
         
         walls[w].active = true;
         walls[w].activeTime = millis();

@@ -227,7 +227,7 @@ void handleArpeggiatorMode() {
     
     // Piano key handling
     int keyY = 160;
-    int keyWidth = 320 / NUM_PIANO_KEYS;
+    int keyWidth = SCREEN_WIDTH / NUM_PIANO_KEYS;
     int keyHeight = 45;
     
     for (int i = 0; i < NUM_PIANO_KEYS; i++) {
@@ -239,13 +239,13 @@ void handleArpeggiatorMode() {
           // Stop current arp
           arp.isPlaying = false;
           if (arp.currentNote != -1) {
-            sendMIDI(0x80, arp.currentNote, 0);
+            sendNoteOff(arp.currentNote);
             arp.currentNote = -1;
           }
         } else {
           // Start new arp - keep timing if already playing
           if (arp.isPlaying && arp.currentNote != -1) {
-            sendMIDI(0x80, arp.currentNote, 0);
+            sendNoteOff(arp.currentNote);
           }
           arp.triggeredKey = note;
           arp.triggeredOctave = pianoOctave;
@@ -289,11 +289,9 @@ void updateArpeggiator() {
 }
 
 void playArpNote() {
-  if (!deviceConnected) return;
-  
   // Turn off previous note
   if (arp.currentNote != -1) {
-    sendMIDI(0x80, arp.currentNote, 0);
+    sendNoteOff(arp.currentNote);
   }
   
   // Check if we should skip this note (for CHANCE pattern)
@@ -308,7 +306,7 @@ void playArpNote() {
   arp.currentNote = getArpNote();
   
   // Play single note
-  sendMIDI(0x90, arp.currentNote, 100);
+  sendNoteOn(arp.currentNote, 100);
   
   // Update display
   drawArpControls();

@@ -99,15 +99,15 @@ inline void drawRoundButton(int x, int y, int w, int h, String text, uint16_t co
 }
 
 inline void drawHeader(String title, String subtitle) {
-  tft.fillRect(0, 0, 480, 45, THEME_SURFACE);
-  tft.drawFastHLine(0, 45, 480, THEME_PRIMARY);
+  tft.fillRect(0, 0, SCREEN_WIDTH, 45, THEME_SURFACE);
+  tft.drawFastHLine(0, 45, SCREEN_WIDTH, THEME_PRIMARY);
   
   tft.setTextColor(THEME_TEXT, THEME_SURFACE);
-  tft.drawCentreString(title, 240, 8, 4);
+  tft.drawCentreString(title, SCREEN_WIDTH/2, 8, 4);
   
   if (subtitle.length() > 0) {
     tft.setTextColor(THEME_TEXT_DIM, THEME_SURFACE);
-    tft.drawCentreString(subtitle, 240, 28, 2);
+    tft.drawCentreString(subtitle, SCREEN_WIDTH/2, 28, 2);
   }
   
   drawRoundButton(10, 5, 70, 35, "BACK", THEME_ERROR);
@@ -145,8 +145,7 @@ inline void drawBackIcon(int x, int y) {
 }
 
 inline void drawBluetoothIcon(int x, int y) {
-  extern bool deviceConnected;
-  uint16_t color = deviceConnected ? 0x001F : THEME_TEXT_DIM;
+  uint16_t color = globalState.bleConnected ? 0x001F : THEME_TEXT_DIM;
   int cx = x + 10;
   int cy = y + 10;
   
@@ -199,12 +198,12 @@ inline void drawBPMIndicator(int x, int y) {
 
 inline void drawModuleHeader(String title, bool showBackButton) {
   // Draw header bar
-  tft.fillRect(0, 0, 480, 45, THEME_SURFACE);
-  tft.drawFastHLine(0, 45, 480, THEME_PRIMARY);
+  tft.fillRect(0, 0, SCREEN_WIDTH, 45, THEME_SURFACE);
+  tft.drawFastHLine(0, 45, SCREEN_WIDTH, THEME_PRIMARY);
   
   // Draw title centered
   tft.setTextColor(THEME_TEXT, THEME_SURFACE);
-  tft.drawCentreString(title, 240, 13, 4);
+  tft.drawCentreString(title, SCREEN_WIDTH/2, 13, 4);
   
   // Draw left icon (back button or settings on main menu)
   if (showBackButton) {

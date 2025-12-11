@@ -159,9 +159,9 @@ void handleAutoChordMode() {
   
   // Handle single key press/hold functionality
   if (touch.isPressed) {
-    int keyWidth = 320 / 8;
-    int keyHeight = 80;
-    int keyY = 80;
+    int keyWidth = SCREEN_WIDTH / 8;
+    int keyHeight = 100;
+    int keyY = CONTENT_TOP + 20;
     
     int currentKey = -1;
     
@@ -209,7 +209,7 @@ void handleAutoChordMode() {
 }
 
 void playChord(int scaleDegree, bool on) {
-  if (!deviceConnected) return;
+  if (!globalState.bleConnected) return;
   
   // Get root note for this scale degree
   int rootNote;
@@ -227,7 +227,7 @@ void playChord(int scaleDegree, bool on) {
       if (chord.intervals[i] >= 0) {
         int chordNote = rootNote + chord.intervals[i];
         if (chordNote >= 24 && chordNote <= 108) {
-          sendMIDI(0x90, chordNote, 100);
+          sendNoteOn(chordNote, 100);
           activeChordNotes[scaleDegree][i] = chordNote;
         }
       }
@@ -236,7 +236,7 @@ void playChord(int scaleDegree, bool on) {
     // Stop chord for this specific scale degree
     for (int i = 0; i < 4; i++) {
       if (activeChordNotes[scaleDegree][i] != -1) {
-        sendMIDI(0x80, activeChordNotes[scaleDegree][i], 0);
+        sendNoteOff(activeChordNotes[scaleDegree][i]);
         activeChordNotes[scaleDegree][i] = -1;
       }
     }

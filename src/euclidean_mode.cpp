@@ -195,8 +195,8 @@ void playEuclideanStep() {
   for (int v = 0; v < 4; v++) {
     if (euclideanState.currentStep < euclideanState.voices[v].steps &&
         euclideanState.voices[v].pattern[euclideanState.currentStep]) {
-      sendMIDI(0x90, euclideanState.voices[v].midiNote, 100);
-      sendMIDI(0x80, euclideanState.voices[v].midiNote, 0);
+      sendNoteOn(euclideanState.voices[v].midiNote, 100);
+      sendNoteOff(euclideanState.voices[v].midiNote);
     }
   }
 }
@@ -314,8 +314,8 @@ void handleEuclideanMode() {
       }
     }
     
-    // Back button
-    if (touchX >= 435 && touchX <= 475 && touchY >= 5 && touchY <= 35) {
+    // Back button - larger touch area
+    if (touchX >= 425 && touchX <= 475 && touchY >= 5 && touchY <= 40) {
       currentMode = MENU;
       return;
     }

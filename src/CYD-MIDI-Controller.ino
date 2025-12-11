@@ -73,7 +73,6 @@ TFT_eSPI tft = TFT_eSPI();
 
 // BLE MIDI globals
 BLECharacteristic *pCharacteristic;
-bool deviceConnected = false;
 uint8_t midiPacket[] = {0x80, 0x80, 0x00, 0x60, 0x7F};
 
 // MIDI Clock sync
@@ -129,22 +128,25 @@ int numApps = 15;
 
 class MIDICallbacks: public BLEServerCallbacks {
     void onConnect(BLEServer* pServer) {
-      deviceConnected = true;
+      globalState.bleConnected = true;
+      Serial.println("BLE connected");
       if (currentMode == MENU) {
         drawMenu(); // Redraw menu to clear "BLE WAITING..."
       }
       updateStatus();
     }
     void onDisconnect(BLEServer* pServer) {
-      deviceConnected = false;
+      globalState.bleConnected = false;
+      Serial.println("BLE disconnected - sending All Notes Off");
+      
       if (currentMode == MENU) {
         drawMenu(); // Redraw menu to show "BLE WAITING..."
       }
       updateStatus();
-      // Stop all notes
-      for (int i = 0; i < 128; i++) {
-        sendMIDI(0x80, i, 0);
-      }
+      
+      // Stop all notes using threaded MIDI (more reliable than loop)
+      stopAllModes();
+      
       // Restart advertising to allow reconnection
       delay(500); // Brief delay before restarting advertising
       BLEDevice::startAdvertising();
@@ -303,7 +305,7 @@ void showSDCardInfo() {
     // Usage bar
     int barWidth = 360;
     int barHeight = 20;
-    int barX = (480 - barWidth) / 2;
+    int barX = (SCREEN_WIDTH - barWidth) / 2;
     float usagePercent = (float)usedBytes / (float)totalBytes;
     
     tft.drawRect(barX, y, barWidth, barHeight, THEME_PRIMARY);
@@ -446,41 +448,47 @@ void cycleModesForScreenshots() {
                         "AUTO CHORD", "LFO", "TB3PO", "GRIDS", "RAGA", "EUCLIDEAN", "MORPH"};
   
   // First capture main menu
-  tft.fillRect(0, 120, 480, 40, THEME_SURFACE);
+  Serial.println("[Screenshot 1/18] Starting: MAIN MENU");
+  tft.fillRect(0, 120, SCREEN_WIDTH, 40, THEME_SURFACE);
   tft.setTextColor(THEME_PRIMARY, THEME_SURFACE);
-  tft.drawCentreString("Capturing: MAIN MENU", 240, 130, 4);
+  tft.drawCentreString("Capturing: MAIN MENU", SCREEN_WIDTH/2, 130, 4);
   delay(1000);
   drawMenu();
   delay(1000);
+  Serial.println("[Screenshot 1/18] Capturing: 00_main_menu");
   saveScreenshot("00_main_menu");
   delay(500);
   
   // Capture settings menu
-  tft.fillRect(0, 120, 480, 40, THEME_SURFACE);
+  Serial.println("[Screenshot 2/18] Starting: SETTINGS");
+  tft.fillRect(0, 120, SCREEN_WIDTH, 40, THEME_SURFACE);
   tft.setTextColor(THEME_PRIMARY, THEME_SURFACE);
-  tft.drawCentreString("Capturing: SETTINGS", 240, 130, 4);
+  tft.drawCentreString("Capturing: SETTINGS", SCREEN_WIDTH/2, 130, 4);
   delay(1000);
   showSettingsMenu(false);
   delay(1000);
+  Serial.println("[Screenshot 2/18] Capturing: 01_settings_menu");
   saveScreenshot("01_settings_menu");
   delay(500);
   
   // Capture bluetooth menu
-  tft.fillRect(0, 120, 480, 40, THEME_SURFACE);
+  Serial.println("[Screenshot 3/18] Starting: BLUETOOTH");
+  tft.fillRect(0, 120, SCREEN_WIDTH, 40, THEME_SURFACE);
   tft.setTextColor(THEME_PRIMARY, THEME_SURFACE);
-  tft.drawCentreString("Capturing: BLUETOOTH", 240, 130, 4);
+  tft.drawCentreString("Capturing: BLUETOOTH", SCREEN_WIDTH/2, 130, 4);
   delay(1000);
   tft.fillScreen(THEME_BG);
   tft.setTextColor(THEME_PRIMARY, THEME_BG);
-  tft.drawCentreString("BLUETOOTH STATUS", 240, 60, 4);
+  tft.drawCentreString("BLUETOOTH STATUS", SCREEN_WIDTH/2, 60, 4);
   tft.setTextColor(THEME_TEXT, THEME_BG);
-  tft.drawCentreString(deviceConnected ? "Connected" : "Waiting for connection", 240, 120, 2);
+  tft.drawCentreString(globalState.bleConnected ? "Connected" : "Waiting for connection", SCREEN_WIDTH/2, 120, 2);
   tft.setTextColor(THEME_TEXT_DIM, THEME_BG);
-  tft.drawCentreString("Device: CYD MIDI", 240, 160, 2);
+  tft.drawCentreString("Device: CYD MIDI", SCREEN_WIDTH/2, 160, 2);
   String mac = BLEDevice::getAddress().toString().c_str();
-  tft.drawCentreString("MAC: " + mac, 240, 190, 2);
+  tft.drawCentreString("MAC: " + mac, SCREEN_WIDTH/2, 190, 2);
   drawRoundButton(190, 240, 100, 35, "BACK", THEME_PRIMARY);
   delay(1000);
+  Serial.println("[Screenshot 3/18] Capturing: 02_bluetooth_status");
   saveScreenshot("02_bluetooth_status");
   delay(500);
   
@@ -495,23 +503,26 @@ void cycleModesForScreenshots() {
   
   for (int i = 0; i < 15; i++) {
     // Show mode name and URL
-    tft.fillRect(0, 120, 480, 60, THEME_SURFACE);
+    tft.fillRect(0, 120, SCREEN_WIDTH, 60, THEME_SURFACE);
     tft.setTextColor(THEME_PRIMARY, THEME_SURFACE);
-    tft.drawCentreString("Mode " + String(i+1) + "/15: " + modeNames[i], 240, 125, 4);
+    tft.drawCentreString("Mode " + String(i+1) + "/15: " + modeNames[i], SCREEN_WIDTH/2, 125, 4);
     tft.setTextColor(THEME_TEXT_DIM, THEME_SURFACE);
     String url = "http://" + ipAddr + "/download?file=/screenshots/" + fileNames[i] + ".bmp";
-    tft.drawCentreString(url, 240, 160, 1);
+    tft.drawCentreString(url, SCREEN_WIDTH/2, 160, 1);
     
     // Also print to serial for easy copying
+    Serial.printf("[Screenshot %d/15] Starting: %s\n", i+1, modeNames[i].c_str());
     Serial.println(url);
     
     delay(1500);
     
     // Enter mode
+    Serial.printf("[Screenshot %d/15] Entering mode...\n", i+1);
     enterMode(modes[i]);
     
     // Wait 2 seconds for mode to fully render, then capture
     delay(2000);
+    Serial.printf("[Screenshot %d/15] Capturing: %s\n", i+1, fileNames[i].c_str());
     saveScreenshot(fileNames[i]);
     
     // Wait additional time or until touch held to skip
@@ -544,13 +555,14 @@ void cycleModesForScreenshots() {
   }
   
   // Done
+  Serial.println("[Screenshot] Complete! 18 total screenshots saved.");
   tft.fillScreen(THEME_SUCCESS);
   tft.setTextColor(THEME_BG, THEME_SUCCESS);
-  tft.drawCentreString("SCREENSHOTS SAVED", 240, 120, 4);
-  tft.drawCentreString("18 BMP files in /screenshots/", 240, 160, 2);
+  tft.drawCentreString("SCREENSHOTS SAVED", SCREEN_WIDTH/2, 120, 4);
+  tft.drawCentreString("18 BMP files in /screenshots/", SCREEN_WIDTH/2, 160, 2);
   tft.setTextColor(0x0000, THEME_SUCCESS);
-  tft.drawCentreString("Menu + Settings + BLE + 15 Modes", 240, 190, 1);
-  tft.drawCentreString("Download via web interface", 240, 210, 1);
+  tft.drawCentreString("Menu + Settings + BLE + 15 Modes", SCREEN_WIDTH/2, 190, 1);
+  tft.drawCentreString("Download via web interface", SCREEN_WIDTH/2, 210, 1);
   delay(3000);
   
   // Return to menu
@@ -694,12 +706,12 @@ void setup() {
   BLEDevice::init("CYD MIDI");
   Serial.println("BLE Device initialized");
   
-  // Initialize thread managers (TODO: Complete migration to threaded architecture)
-  // Serial.println("Starting Touch Thread...");
-  // TouchThread::begin();
-  // Serial.println("Starting MIDI Thread...");
-  // MIDIThread::begin();
-  // Serial.println("Thread managers initialized");
+  // Initialize thread managers
+  Serial.println("Starting Touch Thread...");
+  TouchThread::begin();
+  Serial.println("Starting MIDI Thread...");
+  MIDIThread::begin();
+  Serial.println("Thread managers initialized");
   
   BLEServer *server = BLEDevice::createServer();
   server->setCallbacks(new MIDICallbacks());
@@ -761,10 +773,16 @@ void loop() {
   // Handle web server requests
   handleWebServer();
   
-  // Sync global state with MIDI clock (compatibility layer)
+  // Sync global state with MIDI clock (bidirectional sync)
   if (midiClock.isReceiving) {
+    // External MIDI clock is master
     globalState.bpm = midiClock.calculatedBPM;
     globalState.isPlaying = midiClock.isPlaying;
+    MIDIThread::setBPM(midiClock.calculatedBPM);
+  } else {
+    // Internal BPM is master, sync back to midiClock for compatibility
+    midiClock.calculatedBPM = globalState.bpm;
+    midiClock.isPlaying = globalState.isPlaying;
   }
   
   // Check MIDI clock timeout (stop receiving if no clock for 2 seconds)
@@ -877,7 +895,7 @@ void drawMenu() {
   int spacing = 5;     // Reduced spacing between columns
   int rowSpacing = 2;  // Minimal spacing between rows to fit all 3 rows
   int cols = 5;        // 5 icons per row
-  int startX = (480 - (cols * iconSize + (cols-1) * spacing)) / 2;
+  int startX = (SCREEN_WIDTH - (cols * iconSize + (cols-1) * spacing)) / 2;
   int startY = 58;     // Start slightly higher to fit 3 rows
   
   // Draw all apps (now includes TB3PO as 11th app)
@@ -1136,7 +1154,7 @@ void handleMenuTouch() {
     tft.setTextColor(THEME_PRIMARY, THEME_BG);
     tft.drawCentreString("BLUETOOTH STATUS", 240, 60, 4);
     tft.setTextColor(THEME_TEXT, THEME_BG);
-    tft.drawCentreString(deviceConnected ? "Connected" : "Waiting for connection", 240, 120, 2);
+    tft.drawCentreString(globalState.bleConnected ? "Connected" : "Waiting for connection", SCREEN_WIDTH/2, 120, 2);
     tft.setTextColor(THEME_TEXT_DIM, THEME_BG);
     tft.drawCentreString("Device: CYD MIDI", 240, 160, 2);
     String mac = BLEDevice::getAddress().toString().c_str();
@@ -1162,7 +1180,7 @@ void handleMenuTouch() {
   int spacing = 5;    // Match drawMenu spacing (reduced)
   int rowSpacing = 2; // Match drawMenu row spacing
   int cols = 5;       // 5 icons per row
-  int startX = (480 - (cols * iconSize + (cols-1) * spacing)) / 2;
+  int startX = (SCREEN_WIDTH - (cols * iconSize + (cols-1) * spacing)) / 2;
   int startY = 58;    // Match drawMenu startY
   
   for (int i = 0; i < numApps; i++) {

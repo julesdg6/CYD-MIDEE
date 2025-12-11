@@ -180,10 +180,8 @@ void playRagaNote(uint8_t scaleIndex, bool slide) {
     int16_t bendValue = 8192 + (cents * 8192 / 200);
     bendValue = constrain(bendValue, 0, 16383);
     
-    // Send pitch bend (14-bit value, LSB first, MSB second)
-    uint8_t lsb = bendValue & 0x7F;
-    uint8_t msb = (bendValue >> 7) & 0x7F;
-    sendMIDI(0xE0, lsb, msb); // Pitch bend
+    // Send pitch bend (14-bit value)
+    sendPitchBend(bendValue);
   }
   
   // If sliding, send gradual pitch bend from previous note
@@ -192,34 +190,32 @@ void playRagaNote(uint8_t scaleIndex, bool slide) {
     for (int i = 0; i < 5; i++) {
       int16_t slideValue = 8192 + ((i - 2) * 400);
       slideValue = constrain(slideValue, 0, 16383);
-      uint8_t lsb = slideValue & 0x7F;
-      uint8_t msb = (slideValue >> 7) & 0x7F;
-      sendMIDI(0xE0, lsb, msb);
+      sendPitchBend(slideValue);
       delay(10);
     }
   }
   
   // Stop previous note
   if (raga.currentNote >= 0) {
-    sendMIDI(0x80, raga.currentNote, 0);
+    sendNoteOff(raga.currentNote);
   }
   
   // Play new note
-  sendMIDI(0x90, note, 100);
+  sendNoteOn(note, 100);
   raga.currentNote = note;
 }
 
 void startDrone() {
   // Play drone notes (root and fifth)
-  sendMIDI(0x90, raga.rootNote, 60);
-  sendMIDI(0x90, raga.rootNote + 7, 50); // Fifth
-  sendMIDI(0x90, raga.rootNote + 12, 40); // Octave
+  sendNoteOn(raga.rootNote, 60);
+  sendNoteOn(raga.rootNote + 7, 50); // Fifth
+  sendNoteOn(raga.rootNote + 12, 40); // Octave
 }
 
 void stopDrone() {
-  sendMIDI(0x80, raga.rootNote, 0);
-  sendMIDI(0x80, raga.rootNote + 7, 0);
-  sendMIDI(0x80, raga.rootNote + 12, 0);
+  sendNoteOff(raga.rootNote);
+  sendNoteOff(raga.rootNote + 7);
+  sendNoteOff(raga.rootNote + 12);
 }
 
 void handleRagaMode() {
@@ -255,10 +251,8 @@ void handleRagaMode() {
     int btnH = 50;
     int spacing = 6;
     int rowSpacing = 10;
-    int startX = (480 - (5 * btnW + 4 * spacing)) / 2;
-    int y = CONTENT_TOP;
-    
-    for (int i = 0; i < RAGA_COUNT; i++) {
+    int startX = (SCREEN_WIDTH - (5 * btnW + 4 * spacing)) / 2;
+    int y = CONTENT_TOP;  for (int i = 0; i < RAGA_COUNT; i++) {
       int row = i / 5;
       int col = i % 5;
       int x = startX + col * (btnW + spacing);
@@ -268,11 +262,11 @@ void handleRagaMode() {
         raga.currentRaga = (RagaType)i;
         raga.currentStep = 0;
         if (raga.currentNote >= 0) {
-          sendMIDI(0x80, raga.currentNote, 0);
+          sendNoteOff(raga.currentNote);
           raga.currentNote = -1;
         }
         // Reset pitch bend
-        sendMIDI(0xE0, 0, 64);
+        sendPitchBend(8192);
         drawRagaMode();
         Serial.printf("Selected raga: %s\n", ragaScales[i].name);
         return;
@@ -306,10 +300,10 @@ void handleRagaMode() {
         raga.lastNoteTime = millis();
       } else {
         if (raga.currentNote >= 0) {
-          sendMIDI(0x80, raga.currentNote, 0);
+          sendNoteOff(raga.currentNote);
           raga.currentNote = -1;
         }
-        sendMIDI(0xE0, 0, 64); // Reset pitch bend
+        sendPitchBend(8192); // Reset pitch bend
       }
       drawRagaMode();
       Serial.printf("Raga %s\n", raga.playing ? "started" : "stopped");
@@ -349,12 +343,12 @@ void handleRagaMode() {
       return;
     }
     
-    // BACK
-    if (isButtonPressed(370, ctrlY, ctrlW, ctrlH)) {
+    // BACK - larger touch area
+    if (isButtonPressed(370, ctrlY, ctrlW + 10, ctrlH)) {
       if (raga.playing) {
         raga.playing = false;
         if (raga.currentNote >= 0) {
-          sendMIDI(0x80, raga.currentNote, 0);
+          sendNoteOff(raga.currentNote);
           raga.currentNote = -1;
         }
       }
@@ -362,7 +356,7 @@ void handleRagaMode() {
         stopDrone();
         raga.droneEnabled = false;
       }
-      sendMIDI(0xE0, 0, 64); // Reset pitch bend
+      sendPitchBend(8192); // Reset pitch bend
       exitToMenu();
       return;
     }

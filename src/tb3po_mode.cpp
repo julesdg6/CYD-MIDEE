@@ -179,7 +179,7 @@ void initializeTB3POMode() {
                 tb3po.seed, tb3po.gates, tb3po.slides, tb3po.accents);
   
   tft.fillScreen(THEME_BG);
-  drawHeader("TB-3PO");
+  drawModuleHeader("TB-3PO", true);
   drawTB3POMode();
   
   Serial.println("TB-3PO initialized and drawn");
@@ -260,16 +260,15 @@ void drawTB3POMode() {
   
   y += stepHeight + 20;
   
-  // Control buttons - positioned at very bottom with larger size
+  // Control buttons - moved up from screen edge for better touch response
   int btnW = 90;
-  int btnH = 60;
-  int btnY = 260;  // Position to catch touches around y=290-320
+  int btnH = 50;
+  int btnY = 230;  // Moved up from 260 to avoid edge touch issues
   
   drawRoundButton(10, btnY, btnW, btnH, tb3po.playing ? "STOP" : "PLAY", THEME_PRIMARY, THEME_TEXT);
   drawRoundButton(110, btnY, btnW, btnH, "REGEN", THEME_SECONDARY, THEME_TEXT);
   drawRoundButton(210, btnY, btnW, btnH, "SEED", THEME_ACCENT, THEME_TEXT);
   drawRoundButton(310, btnY, btnW, btnH, "SCALE", THEME_SUCCESS, THEME_TEXT);
-  drawRoundButton(410, btnY, 60, btnH, "<<", THEME_TEXT_DIM, THEME_TEXT);
 }
 
 // Efficient update of just the step visualization
@@ -321,8 +320,8 @@ void handleTB3POMode() {
     // Still handle playback timing even during wait
   }
   
-  int btnH = 60;
-  int btnY = 260;  // Position to catch touches around y=290-320
+  int btnH = 50;
+  int btnY = 230;  // Moved up to avoid edge touch issues
   
   // Handle playback timing
   if (tb3po.playing && tb3po.useInternalClock) {
@@ -340,7 +339,7 @@ void handleTB3POMode() {
       
       // Stop previous note if playing
       if (tb3po.currentNote >= 0) {
-        sendMIDI(0x80, tb3po.currentNote, 0);
+        sendNoteOff(tb3po.currentNote);
         Serial.printf("  Note OFF: %d\n", tb3po.currentNote);
         tb3po.currentNote = -1;
       }
@@ -351,7 +350,7 @@ void handleTB3POMode() {
         int velocity = stepIsAccent(tb3po.step) ? 127 : 100;
         
         Serial.printf("  Note ON: %d vel=%d\n", note, velocity);
-        sendMIDI(0x90, note, velocity);
+        sendNoteOn(note, velocity);
         tb3po.currentNote = note;
       }
       
@@ -382,7 +381,7 @@ void handleTB3POMode() {
       Serial.printf("PLAY/STOP pressed. Was playing: %d\n", tb3po.playing);
       tb3po.playing = !tb3po.playing;
       if (!tb3po.playing && tb3po.currentNote >= 0) {
-        sendMIDI(0x80, tb3po.currentNote, 0);
+        sendNoteOff(tb3po.currentNote);
         tb3po.currentNote = -1;
       }
       if (tb3po.playing) {
@@ -419,11 +418,12 @@ void handleTB3POMode() {
       regenerateAll();
       drawTB3POMode();
     }
-    // Back button
-    else if (isButtonPressed(410, btnY, 60, btnH)) {
-      Serial.println("BACK pressed");
+
+    // Check back button from header (standard position)
+    else if (isButtonPressed(10, 5, 70, 35)) {
+      Serial.println("BACK pressed (header)");
       if (tb3po.currentNote >= 0) {
-        sendMIDI(0x80, tb3po.currentNote, 0);
+        sendNoteOff(tb3po.currentNote);
       }
       tb3po.playing = false;
       currentMode = MENU;

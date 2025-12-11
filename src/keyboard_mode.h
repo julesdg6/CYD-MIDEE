@@ -158,10 +158,13 @@ void handleKeyboardMode() {
 }
 
 void playKeyboardNote(int row, int keyIndex, bool on) {
-  if (!deviceConnected) return;
-  
   int note = getNoteInScale(keyboardScale, keyIndex, keyboardOctave + row) + keyboardKey;
-  sendMIDI(on ? 0x90 : 0x80, note, on ? 100 : 0);
+  
+  if (on) {
+    sendNoteOn(note, 100);
+  } else {
+    sendNoteOff(note);
+  }
   
   Serial.printf("Key R%d:%d: %s %s\n", row, keyIndex, getNoteNameFromMIDI(note).c_str(), on ? "ON" : "OFF");
 }

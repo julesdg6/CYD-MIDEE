@@ -146,7 +146,7 @@ void handleRandomGeneratorMode() {
       if (randomGen.isPlaying) {
         randomGen.nextNoteTime = millis() + randomGen.noteInterval;
       } else if (randomGen.currentNote != -1) {
-        sendMIDI(0x80, randomGen.currentNote, 0);
+        sendNoteOff(randomGen.currentNote);
         randomGen.currentNote = -1;
       }
       drawRandomGenControls();
@@ -253,7 +253,7 @@ void handleRandomGeneratorMode() {
 }
 
 void updateRandomGenerator() {
-  if (!randomGen.isPlaying || !deviceConnected) return;
+  if (!randomGen.isPlaying || !globalState.bleConnected) return;
   
   unsigned long now = millis();
   
@@ -266,7 +266,7 @@ void updateRandomGenerator() {
 void playRandomNote() {
   // Stop current note if playing
   if (randomGen.currentNote != -1) {
-    sendMIDI(0x80, randomGen.currentNote, 0);
+    sendNoteOff(randomGen.currentNote);
     randomGen.currentNote = -1;
   }
   
@@ -279,7 +279,7 @@ void playRandomNote() {
     int note = randomGen.rootNote % 12 + scale.intervals[degree] + (octave * 12);
     
     if (note >= 0 && note <= 127) {
-      sendMIDI(0x90, note, 100);
+      sendNoteOn(note, 100);
       randomGen.currentNote = note;
       
       Serial.printf("Random note: %s (prob: %d%%)\n", 
