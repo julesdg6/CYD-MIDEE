@@ -6,7 +6,6 @@
 
 // UI function declarations
 void updateTouch();
-void updateStatus();
 bool isButtonPressed(int x, int y, int w, int h);
 void drawRoundButton(int x, int y, int w, int h, String text, uint16_t color, bool pressed = false);
 void drawHeader(String title, String subtitle = "");
@@ -48,9 +47,9 @@ inline void updateTouch() {
       rawY = temp;
     }
     
-    // Map using calibrated values
-    int mappedX = map(rawX, calibration.x_min, calibration.x_max, 0, 480);
-    int mappedY = map(rawY, calibration.y_min, calibration.y_max, 0, 320);
+    // Map using calibrated values to screen dimensions
+    int mappedX = map(rawX, calibration.x_min, calibration.x_max, 0, SCREEN_WIDTH);
+    int mappedY = map(rawY, calibration.y_min, calibration.y_max, 0, SCREEN_HEIGHT);
     
     // Apply rotation (default to 0 if not set)
     uint8_t rot = calibration.rotation;
@@ -62,22 +61,22 @@ inline void updateTouch() {
         touch.y = mappedY;
         break;
       case 1:  // 90° clockwise
-        touch.x = 320 - mappedY;
+        touch.x = SCREEN_HEIGHT - mappedY;
         touch.y = mappedX;
         break;
       case 2:  // 180°
-        touch.x = 480 - mappedX;
-        touch.y = 320 - mappedY;
+        touch.x = SCREEN_WIDTH - mappedX;
+        touch.y = SCREEN_HEIGHT - mappedY;
         break;
       case 3:  // 270° clockwise (90° counter-clockwise)
         touch.x = mappedY;
-        touch.y = 480 - mappedX;
+        touch.y = SCREEN_WIDTH - mappedX;
         break;
     }
     
     // Constrain to screen bounds
-    touch.x = constrain(touch.x, 0, 479);
-    touch.y = constrain(touch.y, 0, 319);
+    touch.x = constrain(touch.x, 0, SCREEN_WIDTH - 1);
+    touch.y = constrain(touch.y, 0, SCREEN_HEIGHT - 1);
   }
 }
 
@@ -111,10 +110,6 @@ inline void drawHeader(String title, String subtitle) {
   }
   
   drawRoundButton(SCALED_W(10), SCALED_H(5), BTN_BACK_W, BTN_BACK_H, "BACK", THEME_ERROR);
-}
-
-inline void updateStatus() {
-  // Status bar removed - no more BLE connection alerts on every screen
 }
 
 inline void drawSettingsIcon(int x, int y) {
