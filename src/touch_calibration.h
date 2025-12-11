@@ -4,6 +4,7 @@
 #include <EEPROM.h>
 #include <TFT_eSPI.h>
 #include <XPT2046_Touchscreen.h>
+#include "common_definitions.h"
 
 #define EEPROM_SIZE 64
 #define CALIBRATION_MAGIC 0xCAFE
@@ -30,8 +31,6 @@ extern TFT_eSPI tft;
 extern XPT2046_Touchscreen ts;
 
 static TouchCalibration calibration;
-
-#include "common_definitions.h"
 
 inline void drawCalibrationCrosshair(int x, int y, uint16_t color) {
   int size = 20;
