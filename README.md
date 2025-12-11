@@ -134,10 +134,11 @@ All boards available for ~$15 from AliExpress/Amazon
 
 ### Recent Enhancements
 
+- ✅ **Multi-resolution support** - Automatic screen scaling for 480×320, 320×240 displays
 - ✅ **Larger touch targets** - Minimum 45px buttons for better accuracy
 - ✅ **Fixed touch detection** - Resolved Y-coordinate mismatches in all modes
 - ✅ **Improved layouts** - Settings menu, Grid Piano (45×32 cells), Auto Chord, Arpeggiator
-- ✅ **Better spacing** - No overlapping buttons, optimized for 480×320 display
+- ✅ **Better spacing** - No overlapping buttons, optimized layouts
 - ✅ **Header icons** - BLE status, SD card indicator, and BPM display on main menu
 - ✅ **MIDI channel support** - Configurable per-session MIDI channels (1-16)
 - ✅ **Expanded flash memory** - 3.1MB app partition for advanced features
@@ -156,8 +157,14 @@ All boards available for ~$15 from AliExpress/Amazon
    cd CYD-MIDI-Controller-EE
    ```
 3. Open in VS Code with PlatformIO extension
-4. Select your board in `platformio.ini` (default: `cyd35`)
+4. **Select your CYD board** in `platformio.ini`:
+   - Edit line 3 to uncomment the environment for your display:
+     - `default_envs = cyd35` for 3.5" (480×320) - *Default*
+     - `default_envs = cyd28` for 2.8" (320×240)
+     - `default_envs = cyd24` for 2.4" (320×240)
 5. Click "Upload"
+
+**Note**: Screen dimensions are automatically configured based on your board selection. All UI elements scale to match your display size.
 
 ### Option B: Arduino IDE
 
@@ -189,6 +196,8 @@ Replace the `libraries/TFT_eSPI/User_Setup.h` with the `User_Setup.h` from the r
 ## Usage
 
 ### First Run - Touch Calibration
+
+On first boot, the device will automatically start touch calibration. Follow the on-screen prompts to touch each crosshair accurately. **Important**: If you change display size (e.g., from 3.5" to 2.8"), you must re-run calibration from the Settings menu for accurate touch detection.
 
 ### Settings Menu
 

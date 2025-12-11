@@ -254,17 +254,17 @@ void initSDCard() {
 void showSDCardInfo() {
   tft.fillScreen(THEME_BG);
   tft.setTextColor(THEME_PRIMARY, THEME_BG);
-  tft.drawCentreString("SD CARD INFO", 240, 20, 4);
+  tft.drawCentreString("SD CARD INFO", SCREEN_WIDTH/2, 20, 4);
   
   int y = 70;
   int lineHeight = 25;
   
   if (!sdCardAvailable) {
     tft.setTextColor(THEME_ERROR, THEME_BG);
-    tft.drawCentreString("NO SD CARD DETECTED", 240, y, 2);
+    tft.drawCentreString("NO SD CARD DETECTED", SCREEN_WIDTH/2, y, 2);
     tft.setTextColor(THEME_TEXT_DIM, THEME_BG);
     y += lineHeight * 2;
-    tft.drawCentreString("Check card is inserted", 240, y, 2);
+    tft.drawCentreString("Check card is inserted", SCREEN_WIDTH/2, y, 2);
   } else {
     // Remount to get fresh stats
     SD.begin(SD_CS);
@@ -316,18 +316,20 @@ void showSDCardInfo() {
     
     y += barHeight + 10;
     tft.setTextColor(THEME_TEXT_DIM, THEME_BG);
-    tft.drawCentreString(String((int)(usagePercent * 100)) + "% used", 240, y, 2);
+    tft.drawCentreString(String((int)(usagePercent * 100)) + "% used", SCREEN_WIDTH/2, y, 2);
     
     SD.end(); // Release SPI
   }
   
   // Back button
-  drawRoundButton(190, 260, 100, 35, "BACK", THEME_PRIMARY);
+  int backBtnX3 = (SCREEN_WIDTH - 100) / 2;
+  int backBtnY3 = SCREEN_HEIGHT - 60;
+  drawRoundButton(backBtnX3, backBtnY3, 100, 35, "BACK", THEME_PRIMARY);
   
   // Wait for back button
   while (true) {
     updateTouch();
-    if (touch.justPressed && isButtonPressed(190, 260, 100, 35)) {
+    if (touch.justPressed && isButtonPressed(backBtnX3, backBtnY3, 100, 35)) {
       drawMenu();
       return;
     }
@@ -434,11 +436,11 @@ void cycleModesForScreenshots() {
   // Cycle through all modes for visual inspection and screenshot capture
   tft.fillScreen(THEME_BG);
   tft.setTextColor(THEME_PRIMARY, THEME_BG);
-  tft.drawCentreString("CYCLING MODES", 240, 20, 4);
+  tft.drawCentreString("CYCLING MODES", SCREEN_WIDTH/2, 20, 4);
   tft.setTextColor(THEME_TEXT, THEME_BG);
-  tft.drawCentreString("Saving screenshots to SD", 240, 60, 2);
+  tft.drawCentreString("Saving screenshots to SD", SCREEN_WIDTH/2, 60, 2);
   tft.setTextColor(THEME_TEXT_DIM, THEME_BG);
-  tft.drawCentreString("Hold 3 seconds to skip", 240, 90, 2);
+  tft.drawCentreString("Hold 3 seconds to skip", SCREEN_WIDTH/2, 90, 2);
   
   AppMode modes[] = {KEYBOARD, SEQUENCER, BOUNCING_BALL, PHYSICS_DROP, 
                      RANDOM_GENERATOR, XY_PAD, ARPEGGIATOR, GRID_PIANO, 
@@ -486,7 +488,8 @@ void cycleModesForScreenshots() {
   tft.drawCentreString("Device: CYD MIDI", SCREEN_WIDTH/2, 160, 2);
   String mac = BLEDevice::getAddress().toString().c_str();
   tft.drawCentreString("MAC: " + mac, SCREEN_WIDTH/2, 190, 2);
-  drawRoundButton(190, 240, 100, 35, "BACK", THEME_PRIMARY);
+  int backBtnX2 = (SCREEN_WIDTH - 100) / 2;
+  drawRoundButton(backBtnX2, SCREEN_HEIGHT - 80, 100, 35, "BACK", THEME_PRIMARY);
   delay(1000);
   Serial.println("[Screenshot 3/18] Capturing: 02_bluetooth_status");
   saveScreenshot("02_bluetooth_status");
@@ -549,7 +552,7 @@ void cycleModesForScreenshots() {
     if (skipMode) {
       tft.fillScreen(THEME_WARNING);
       tft.setTextColor(THEME_BG, THEME_WARNING);
-      tft.drawCentreString("SKIPPED", 240, 150, 4);
+      tft.drawCentreString("SKIPPED", SCREEN_WIDTH/2, SCREEN_HEIGHT/2, 4);
       delay(500);
     }
   }
@@ -572,7 +575,7 @@ void cycleModesForScreenshots() {
 void showSettingsMenu(bool interactive) {
   tft.fillScreen(THEME_BG);
   tft.setTextColor(THEME_PRIMARY, THEME_BG);
-  tft.drawCentreString("SETTINGS", 240, 12, 4);
+  tft.drawCentreString("SETTINGS", SCREEN_WIDTH/2, 12, 4);
   
   int btnY = 50;
   int btnH = 45;  // Good size for touch without being too large
@@ -810,7 +813,7 @@ void loop() {
           longPressTriggered = true;
           tft.fillScreen(THEME_WARNING);
           tft.setTextColor(THEME_BG, THEME_WARNING);
-          tft.drawCentreString("CALIBRATION MODE", 240, 140, 4);
+          tft.drawCentreString("CALIBRATION MODE", SCREEN_WIDTH/2, SCREEN_HEIGHT/2 - 20, 4);
           delay(500);
           resetCalibration();
           if (performCalibration()) {
@@ -888,7 +891,7 @@ void drawMenu() {
   
   // Subtitle under header
   tft.setTextColor(THEME_TEXT_DIM, THEME_BG);
-  tft.drawCentreString("Cheap Yellow Display", 240, 52, 2);
+  tft.drawCentreString("Cheap Yellow Display", SCREEN_WIDTH/2, 52, 2);
   
   // Dynamic grid layout - 5 icons per row with bigger graphics
   int iconSize = 85;   // Button size stays the same
@@ -1152,17 +1155,18 @@ void handleMenuTouch() {
     // Show BLE status
     tft.fillScreen(THEME_BG);
     tft.setTextColor(THEME_PRIMARY, THEME_BG);
-    tft.drawCentreString("BLUETOOTH STATUS", 240, 60, 4);
+    tft.drawCentreString("BLUETOOTH STATUS", SCREEN_WIDTH/2, 60, 4);
     tft.setTextColor(THEME_TEXT, THEME_BG);
     tft.drawCentreString(globalState.bleConnected ? "Connected" : "Waiting for connection", SCREEN_WIDTH/2, 120, 2);
     tft.setTextColor(THEME_TEXT_DIM, THEME_BG);
-    tft.drawCentreString("Device: CYD MIDI", 240, 160, 2);
+    tft.drawCentreString("Device: CYD MIDI", SCREEN_WIDTH/2, 160, 2);
     String mac = BLEDevice::getAddress().toString().c_str();
-    tft.drawCentreString("MAC: " + mac, 240, 190, 2);
-    drawRoundButton(190, 240, 100, 35, "BACK", THEME_PRIMARY);
+    tft.drawCentreString("MAC: " + mac, SCREEN_WIDTH/2, 190, 2);
+    int backBtnX = (SCREEN_WIDTH - 100) / 2;
+    drawRoundButton(backBtnX, SCREEN_HEIGHT - 80, 100, 35, "BACK", THEME_PRIMARY);
     while (true) {
       updateTouch();
-      if (touch.justPressed && isButtonPressed(190, 240, 100, 35)) {
+      if (touch.justPressed && isButtonPressed(backBtnX, SCREEN_HEIGHT - 80, 100, 35)) {
         drawMenu();
         return;
       }
