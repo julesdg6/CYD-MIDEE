@@ -133,7 +133,6 @@ class MIDICallbacks: public BLEServerCallbacks {
       if (currentMode == MENU) {
         drawMenu(); // Redraw menu to clear "BLE WAITING..."
       }
-      updateStatus();
     }
     void onDisconnect(BLEServer* pServer) {
       globalState.bleConnected = false;
@@ -142,7 +141,6 @@ class MIDICallbacks: public BLEServerCallbacks {
       if (currentMode == MENU) {
         drawMenu(); // Redraw menu to show "BLE WAITING..."
       }
-      updateStatus();
       
       // Stop all notes using threaded MIDI (more reliable than loop)
       stopAllModes();
@@ -758,7 +756,6 @@ void setup() {
   initializeMorphMode();
   
   drawMenu();
-  updateStatus();
   Serial.println("MIDI Controller ready!");
   Serial.println("Touch settings cog in top-left to access configuration");
 }
@@ -766,9 +763,6 @@ void setup() {
 void loop() {
   // Update touch state (using existing calibration logic)
   updateTouch();
-  
-  // TODO: Switch to threaded touch input
-  // touch = TouchThread::getState();
   
   // Handle web server requests
   handleWebServer();
@@ -1250,12 +1244,10 @@ void enterMode(AppMode mode) {
       initializeMorphMode();
       break;
   }
-  updateStatus();
 }
 
 void exitToMenu() {
   currentMode = MENU;
   stopAllModes();
   drawMenu();
-  updateStatus();
 }
