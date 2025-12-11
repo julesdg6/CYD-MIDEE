@@ -156,8 +156,14 @@ All boards available for ~$15 from AliExpress/Amazon
    cd CYD-MIDI-Controller-EE
    ```
 3. Open in VS Code with PlatformIO extension
-4. Select your board in `platformio.ini` (default: `cyd35`)
+4. **Select your CYD board** in `platformio.ini`:
+   - Edit line 3 to uncomment the environment for your display:
+     - `default_envs = cyd35` for 3.5" (480×320) - *Default*
+     - `default_envs = cyd28` for 2.8" (320×240)
+     - `default_envs = cyd24` for 2.4" (320×240)
 5. Click "Upload"
+
+**Note**: Screen dimensions are automatically configured based on your board selection. All UI elements scale to match your display size.
 
 ### Option B: Arduino IDE
 
