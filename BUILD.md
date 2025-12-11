@@ -53,7 +53,7 @@ pio run
 ### Prerequisites: USB Drivers
 Before uploading, ensure you have installed the appropriate USB-to-serial drivers:
 - **CP210x (Silicon Labs)**: [Download here](https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers)
-- **CH340/CH341 (WCH)**: [Download here](http://www.wch-ic.com/downloads/CH341SER_EXE.html)
+- **CH340/CH341 (WCH)**: [Download here](http://www.wch-ic.com/downloads/CH341SER_EXE.html) (Note: Official WCH site uses HTTP)
 
 Most CYD boards use the CP210x chip. Install the driver for your operating system and restart if needed.
 
@@ -160,11 +160,14 @@ Touch controller pins are defined in the main sketch:
   2. Press **RST** briefly
   3. Release **BOOT** after 1-2 seconds
   4. Upload immediately
-- Add to `platformio.ini`:
+- Modify `platformio.ini` (only if your board uses ESP32-S3 chip):
   ```ini
-  board = esp32-s3-devkitc-1
+  [env:cyd35_s3]  ; Create new environment
+  board = esp32-s3-devkitc-1  ; Or generic: esp32s3box
   upload_speed = 115200
+  ; Copy other build_flags from [env:cyd35]
   ```
+  Note: Standard CYD boards use ESP32, not S3. Only modify for S3-specific boards.
 
 ### Serial Monitor
 ```bash

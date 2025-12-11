@@ -186,7 +186,8 @@ Then open the folder in VS Code with PlatformIO installed.
   - Linux: Usually pre-installed (module: `cp210x`)
 
 - **CH340/CH341 (WCH)** - Alternative chip used on some boards
-  - Download: [WCH CH340 Drivers](http://www.wch-ic.com/downloads/CH341SER_EXE.html)
+  - Download: [WCH CH340 Drivers](http://www.wch-ic.com/downloads/CH341SER_EXE.html) (Note: Official WCH site uses HTTP)
+  - Alternative sources: Search for "CH340 driver" + your OS on reputable tech sites
   - macOS: May require allowing in System Preferences → Security & Privacy
   - Windows: Run installer as administrator
   - Linux: Usually pre-installed (module: `ch341`)
@@ -281,13 +282,16 @@ Common working speeds: `115200`, `230400`, `460800`, `921600`
   2. Press **RST** button briefly
   3. Release **BOOT** after 1-2 seconds
   4. Device should appear as serial port, then upload
-- For ESP32-S3 with **native USB CDC**, add to `platformio.ini`:
+- For ESP32-S3 with **native USB CDC**, modify `platformio.ini`:
   ```ini
-  board = esp32-s3-devkitc-1
+  [env:cyd35_s3]  ; Create new environment or modify existing
+  board = esp32-s3-devkitc-1  ; Or use generic: esp32s3box
   board_build.mcu = esp32s3
   board_build.f_cpu = 240000000L
   upload_speed = 115200
+  ; Keep all other build_flags from cyd35 environment
   ```
+  Note: Most CYD boards use standard ESP32, not S3. Only modify if your board specifically has ESP32-S3 chip.
 
 **Permission denied (Linux/macOS)**
 - Linux: Add user to `dialout` group:
