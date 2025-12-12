@@ -50,25 +50,42 @@ pio run
 
 ## Uploading to Board
 
+### Prerequisites: USB Drivers
+Before uploading, ensure you have installed the appropriate USB-to-serial drivers:
+- **CP210x (Silicon Labs)**: [Download here](https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers)
+- **CH340/CH341 (WCH)**: [Download here](http://www.wch-ic.com/downloads/CH341SER_EXE.html) (Note: Official WCH site uses HTTP)
+
+Most CYD boards use the CP210x chip. Install the driver for your operating system and restart if needed.
+
+### Detecting Your Serial Port
+
 1. Connect your ESP32 board via USB
 2. Find the serial port:
    ```bash
    # macOS
    ls /dev/cu.*
-   # Look for something like /dev/cu.usbserial-* or /dev/cu.SLAB_USBtoUART
+   # Look for: /dev/cu.usbserial-* or /dev/cu.SLAB_USBtoUART
+   
+   # Linux
+   ls /dev/ttyUSB* /dev/ttyACM*
+   # Look for: /dev/ttyUSB0 or /dev/ttyACM0
+   
+   # Windows (PowerShell)
+   [System.IO.Ports.SerialPort]::getportnames()
+   # Look for: COM3, COM4, etc.
    ```
 
 ### Using VS Code
 1. Click the right arrow (→) icon in the bottom toolbar to upload
-2. Or use **PlatformIO: Upload** from the command palette
+2. Or use **PlatformIO: Upload** from the command palette (Cmd+Shift+P / Ctrl+Shift+P)
 
 ### Using Command Line
 ```bash
 # Upload (PlatformIO auto-detects port)
-pio run -t upload
+pio run -t upload -e cyd35
 
 # Or specify the port explicitly
-pio run -t upload --upload-port /dev/cu.SLAB_USBtoUART
+pio run -t upload -e cyd35 --upload-port /dev/cu.SLAB_USBtoUART
 
 # Monitor serial output after upload
 pio device monitor --baud 115200
@@ -105,35 +122,234 @@ Touch controller pins are defined in the main sketch:
 #define XPT2046_CS 33
 ```
 
+## Pin Map Reference
+
+This section provides complete pin assignments for all CYD board variants. This information is important when planning hardware expansions like serial MIDI interfaces (e.g., M5 MIDI breakout).
+
+### ESP32 Pin Usage Overview
+
+All CYD boards use the ESP32-WROOM-32 module with the following peripheral assignments:
+
+| Peripheral | SPI Bus | Pins Used | Notes |
+|------------|---------|-----------|-------|
+| TFT Display | VSPI | 12, 13, 14, 15, 2, 21/27 | Main display controller |
+| Touch Controller (XPT2046) | VSPI (custom) | 25, 32, 33, 36, 39 | Resistive touch digitizer |
+| SD Card Reader | HSPI | 5, 18, 19, 23 | MicroSD card slot |
+| Bluetooth/BLE | Internal | N/A | Built-in ESP32 radio |
+| WiFi | Internal | N/A | Built-in ESP32 radio |
+| Serial/USB | UART0 | 1 (TX), 3 (RX) | Programming & debug console |
+
+### Detailed Pin Assignments by Board
+
+#### CYD 3.5" (ESP32-3248S035) - 480×320 ILI9488
+
+**TFT Display (VSPI)**
+| Pin # | Function | Description |
+|-------|----------|-------------|
+| GPIO12 | TFT_MISO | SPI Master In Slave Out |
+| GPIO13 | TFT_MOSI | SPI Master Out Slave In |
+| GPIO14 | TFT_SCLK | SPI Clock |
+| GPIO15 | TFT_CS | Chip Select |
+| GPIO2 | TFT_DC | Data/Command control |
+| GPIO27 | TFT_BL | Backlight control (PWM capable) |
+| N/A | TFT_RST | Reset (tied to ESP32 reset) |
+
+**Touch Controller (XPT2046) - Custom SPI**
+| Pin # | Function | Description |
+|-------|----------|-------------|
+| GPIO32 | XPT2046_MOSI | Touch SPI Data Out |
+| GPIO39 | XPT2046_MISO | Touch SPI Data In (input only) |
+| GPIO25 | XPT2046_CLK | Touch SPI Clock |
+| GPIO33 | XPT2046_CS | Touch Chip Select |
+| GPIO36 | XPT2046_IRQ | Touch Interrupt (input only) |
+
+**SD Card (HSPI)**
+| Pin # | Function | Description |
+|-------|----------|-------------|
+| GPIO23 | SD_MOSI | SD Card Data Out |
+| GPIO19 | SD_MISO | SD Card Data In |
+| GPIO18 | SD_SCK | SD Card Clock |
+| GPIO5 | SD_CS | SD Card Chip Select |
+
+**System Pins**
+| Pin # | Function | Description |
+|-------|----------|-------------|
+| GPIO1 | TX0 | Serial transmit (USB programming) |
+| GPIO3 | RX0 | Serial receive (USB programming) |
+| GPIO0 | BOOT | Boot mode select (input only) |
+| EN | RESET | Hardware reset |
+
+#### CYD 2.8" (ESP32-2432S028R) & 2.4" (ESP32-2432S024) - 320×240 ILI9341
+
+**TFT Display (VSPI)**
+| Pin # | Function | Description |
+|-------|----------|-------------|
+| GPIO12 | TFT_MISO | SPI Master In Slave Out |
+| GPIO13 | TFT_MOSI | SPI Master Out Slave In |
+| GPIO14 | TFT_SCLK | SPI Clock |
+| GPIO15 | TFT_CS | Chip Select |
+| GPIO2 | TFT_DC | Data/Command control |
+| GPIO21 | TFT_BL | Backlight control (PWM capable) |
+| N/A | TFT_RST | Reset (tied to ESP32 reset) |
+
+**Touch Controller (XPT2046) - Custom SPI**
+| Pin # | Function | Description |
+|-------|----------|-------------|
+| GPIO32 | XPT2046_MOSI | Touch SPI Data Out |
+| GPIO39 | XPT2046_MISO | Touch SPI Data In (input only) |
+| GPIO25 | XPT2046_CLK | Touch SPI Clock |
+| GPIO33 | XPT2046_CS | Touch Chip Select |
+| GPIO36 | XPT2046_IRQ | Touch Interrupt (input only) |
+
+**SD Card (HSPI)**
+| Pin # | Function | Description |
+|-------|----------|-------------|
+| GPIO23 | SD_MOSI | SD Card Data Out |
+| GPIO19 | SD_MISO | SD Card Data In |
+| GPIO18 | SD_SCK | SD Card Clock |
+| GPIO5 | SD_CS | SD Card Chip Select |
+
+**System Pins**
+| Pin # | Function | Description |
+|-------|----------|-------------|
+| GPIO1 | TX0 | Serial transmit (USB programming) |
+| GPIO3 | RX0 | Serial receive (USB programming) |
+| GPIO0 | BOOT | Boot mode select (input only) |
+| EN | RESET | Hardware reset |
+
+### Key Differences Between Board Variants
+
+| Feature | CYD 3.5" | CYD 2.8" / 2.4" |
+|---------|----------|-----------------|
+| Display Driver | ILI9488 | ILI9341 |
+| Resolution | 480×320 | 320×240 |
+| Backlight Pin | GPIO27 | GPIO21 |
+| Touch/SD/SPI | Identical | Identical |
+| Form Factor | Larger | Compact |
+
+### Available Pins for Expansion
+
+The following ESP32 GPIO pins are **not used** by the current hardware configuration and are available for expansion projects like serial MIDI (M5 MIDI breakout):
+
+**Available GPIOs:**
+- **GPIO4** - General purpose I/O
+- **GPIO16** - UART2 RX (recommended for serial MIDI IN)
+- **GPIO17** - UART2 TX (recommended for serial MIDI OUT)
+- **GPIO22** - I2C SCL or general I/O
+- **GPIO26** - General purpose I/O / DAC output
+- **GPIO34** - Input only (ADC1_CH6)
+- **GPIO35** - Input only (ADC1_CH7)
+
+**Notes on Available Pins:**
+- GPIO16/17 are ideal for UART2-based serial MIDI implementation
+- GPIO34, GPIO35, GPIO36, GPIO39 are input-only pins (cannot drive outputs)
+- GPIO22 can be used for I2C SCL (GPIO21 is backlight on 2.8"/2.4" boards, but available as I2C SDA on 3.5" boards)
+- Some pins may have pull-up/down resistors on the CYD board - verify with multimeter before use
+
+### Serial MIDI Expansion Planning
+
+For adding a hardware MIDI interface (e.g., M5 MIDI breakout or DIN-5 connector):
+
+**Recommended Pin Assignment:**
+| Function | GPIO | Notes |
+|----------|------|-------|
+| MIDI OUT | GPIO17 (TX2) | Connect via optocoupler to DIN-5 pin 5 |
+| MIDI IN | GPIO16 (RX2) | Connect via optocoupler from DIN-5 pin 4 |
+| MIDI THRU | GPIO4 | Optional - buffer input to second output |
+
+**Circuit Requirements:**
+- MIDI OUT: 5V source + 220Ω resistor + 6N138 optocoupler
+- MIDI IN: 6N138 optocoupler + 220Ω + 4.7kΩ resistors
+- Standard MIDI baud rate: 31,250 bps
+
+**Software Implementation:**
+```cpp
+// Example UART2 setup for serial MIDI
+HardwareSerial MIDISerial(2); // UART2
+void setup() {
+  MIDISerial.begin(31250, SERIAL_8N1, 16, 17); // RX=16, TX=17
+}
+```
+
+### Pin Constraints & Limitations
+
+**Input-Only Pins (cannot be used as outputs):**
+- GPIO34, GPIO35, GPIO36, GPIO39
+
+**Strapping Pins (avoid if possible, or use with caution):**
+- GPIO0 - Must be HIGH during boot (pulled HIGH on CYD boards)
+- GPIO2 - Used by TFT_DC, affects boot mode if changed
+- GPIO5 - Used by SD_CS, affects boot if pulled HIGH
+- GPIO12 - Used by TFT_MISO, affects flash voltage
+- GPIO15 - Used by TFT_CS, must be HIGH during boot
+
+**Reserved Pins (do not use):**
+- GPIO1/3 - UART0 TX/RX (USB serial programming)
+- GPIO6-11 - Connected to internal SPI flash (do not use!)
+
 ## Troubleshooting
 
 ### Build Errors
-- **Library not found**: Run `pio lib install` to fetch dependencies
-- **TFT display errors**: Verify pin definitions in `platformio.ini`
+- **Library not found**: Run `pio lib install` to fetch dependencies automatically
+- **TFT display errors**: Verify pin definitions in `platformio.ini` match your board
 - **BLE errors**: Ensure you're using ESP32 (not ESP8266)
+- **Partition table errors**: The project uses `huge_app.csv` for 3.1MB app space - this is correct
 
 ### Upload Errors
+
+**Common Issues:**
 - **Serial port not found**: 
-  - Check USB connection
-  - Install CH340/CP210x drivers if needed
-  - Manually specify port: `--upload-port /dev/cu.XXX`
+  - Check USB cable (must be data cable, not charge-only)
+  - Install CP210x or CH340 drivers (see [Prerequisites](#prerequisites-usb-drivers))
+  - Try different USB port (USB 2.0 often more reliable)
+  - Manually specify port: `pio run -t upload --upload-port /dev/cu.XXX`
+
+- **"Failed to connect to ESP32" or "Timed out waiting for packet header"**:
+  - Hold **BOOT** button during upload (release when "Writing at..." appears)
+  - Reduce upload speed in `platformio.ini`: `upload_speed = 115200`
+  - Try different reset method: `upload_resetmethod = nodemcu`
+  - Close other programs using serial port (Arduino IDE, screen, minicom)
+
 - **Permission denied**: 
-  - macOS: Grant permissions in System Settings → Privacy & Security
-  - Linux: Add user to `dialout` group
+  - **macOS**: Grant Terminal/VS Code permissions in System Preferences → Security & Privacy → Privacy → Full Disk Access
+  - **Linux**: Add user to `dialout` group:
+    ```bash
+    sudo usermod -a -G dialout $USER
+    # Log out and back in for changes to take effect
+    ```
+
+**ESP32-S3 Boards:**
+- May have two USB ports - try both
+- Requires manual boot mode:
+  1. Hold **BOOT** button
+  2. Press **RST** briefly
+  3. Release **BOOT** after 1-2 seconds
+  4. Upload immediately
+- Modify `platformio.ini` (only if your board uses ESP32-S3 chip):
+  ```ini
+  [env:cyd35_s3]  ; Create new environment
+  board = esp32-s3-devkitc-1  ; Or generic: esp32s3box
+  upload_speed = 115200
+  ; Copy other build_flags from [env:cyd35]
+  ```
+  Note: Standard CYD boards use ESP32, not S3. Only modify for S3-specific boards.
 
 ### Serial Monitor
 ```bash
 # Open serial monitor
 pio device monitor --baud 115200
 
+# Monitor with timestamp
+pio device monitor --baud 115200 --filter time
+
 # Exit: Ctrl+C
 ```
 
-## Clean Build
-If you encounter strange errors, try a clean build:
+### Clean Build
+If encountering persistent errors, try a clean build:
 ```bash
 pio run --target clean
-pio run
+pio run -e cyd35
 ```
 
 ## Library Dependencies

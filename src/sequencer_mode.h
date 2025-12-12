@@ -88,33 +88,33 @@ void drawSequencerMode() {
   // BPM display
   tft.setTextColor(THEME_TEXT, THEME_BG);
   if (midiClock.isReceiving) {
-    tft.drawString(String((int)midiClock.calculatedBPM) + " [EXT]", 310, btnY + 15, 2);
+    tft.drawString(String((int)midiClock.calculatedBPM) + " [EXT]", SCALED_W(310), btnY + SCALED_H(15), 2);
   } else {
-    tft.drawString(String((int)globalState.bpm), 310, btnY + 15, 2);
+    tft.drawString(String((int)globalState.bpm), SCALED_W(310), btnY + SCALED_H(15), 2);
   }
 }
 
 void drawSequencerGrid() {
-  int gridX = 10;
-  int gridY = 55;
-  int cellW = 27;  // Increased from 15 for easier tapping
-  int cellH = 42;  // Increased from 28 for easier tapping
-  int spacing = 2;  // Slightly more spacing
+  int gridX = SCALED_W(10);
+  int gridY = SCALED_H(55);
+  int cellW = SCALED_W(27);  // Increased from 15 for easier tapping
+  int cellH = SCALED_H(42);  // Increased from 28 for easier tapping
+  int spacing = SCALED_W(2);  // Slightly more spacing
   
   // 808-style track labels and colors
   String trackLabels[] = {"KICK", "SNRE", "HHAT", "OPEN"};
   uint16_t trackColors[] = {THEME_ERROR, THEME_WARNING, THEME_PRIMARY, THEME_ACCENT};
   
   for (int track = 0; track < SEQ_TRACKS; track++) {
-    int y = gridY + track * (cellH + spacing + 3);
+    int y = gridY + track * (cellH + spacing + SCALED_H(3));
     
     // Track name with color coding
     tft.setTextColor(trackColors[track], THEME_BG);
-    tft.drawString(trackLabels[track], gridX, y + 12, 1);
+    tft.drawString(trackLabels[track], gridX, y + SCALED_H(12), 1);
     
     // Steps - 16 steps in 808 style
     for (int step = 0; step < SEQ_STEPS; step++) {
-      int x = gridX + 35 + step * (cellW + spacing);
+      int x = gridX + SCALED_W(35) + step * (cellW + spacing);
       
       bool active = sequencePattern[track][step];
       bool current = (sequencerPlaying && step == currentStep);
@@ -138,7 +138,7 @@ void drawSequencerGrid() {
 
 void handleSequencerMode() {
   // Back button - larger touch area
-  if (touch.justPressed && isButtonPressed(10, 5, 70, 35)) {
+  if (touch.justPressed && isButtonPressed(BACK_BTN_X, BACK_BTN_Y, BTN_BACK_W, BTN_BACK_H)) {
     sequencerPlaying = false;
     exitToMenu();
     return;
@@ -154,7 +154,7 @@ void handleSequencerMode() {
   // Handle touch input
   if (touch.justPressed) {
     // Transport controls
-    if (seqBtnPlayStop.justPressed()) {
+    if (isButtonPressed(SCALED_W(10), SCALED_H(245), SCALED_W(70), BTN_MEDIUM_H)) {
       sequencerPlaying = !sequencerPlaying;
       if (sequencerPlaying) {
         currentStep = 0;
@@ -164,7 +164,7 @@ void handleSequencerMode() {
       return;
     }
     
-    if (seqBtnClear.justPressed()) {
+    if (isButtonPressed(SCALED_W(90), SCALED_H(245), SCALED_W(70), BTN_MEDIUM_H)) {
       // Clear all patterns
       for (int t = 0; t < SEQ_TRACKS; t++) {
         for (int s = 0; s < SEQ_STEPS; s++) {
@@ -175,7 +175,7 @@ void handleSequencerMode() {
       return;
     }
     
-    if (seqBtnBpmDown.justPressed()) {
+    if (isButtonPressed(SCALED_W(170), SCALED_H(245), BTN_SMALL_W, BTN_MEDIUM_H)) {
       float newBpm = max(60.0f, globalState.bpm - 1.0f);
       setBPM(newBpm);
       stepInterval = 60000 / (int)globalState.bpm / 4;
@@ -183,7 +183,7 @@ void handleSequencerMode() {
       return;
     }
     
-    if (seqBtnBpmUp.justPressed()) {
+    if (isButtonPressed(SCALED_W(240), SCALED_H(245), BTN_SMALL_W, BTN_MEDIUM_H)) {
       float newBpm = min(200.0f, globalState.bpm + 1.0f);
       setBPM(newBpm);
       stepInterval = 60000 / (int)globalState.bpm / 4;
@@ -192,16 +192,16 @@ void handleSequencerMode() {
     }
     
     // Grid interaction
-    int gridX = 45;
-    int gridY = 55;
-    int cellW = 27;
-    int cellH = 42;
-    int spacing = 2;
+    int gridX = SCALED_W(45);
+    int gridY = SCALED_H(55);
+    int cellW = SCALED_W(27);
+    int cellH = SCALED_H(42);
+    int spacing = SCALED_W(2);
     
     for (int track = 0; track < SEQ_TRACKS; track++) {
       for (int step = 0; step < SEQ_STEPS; step++) {
         int x = gridX + step * (cellW + spacing);
-        int y = gridY + track * (cellH + spacing + 3);
+        int y = gridY + track * (cellH + spacing + SCALED_H(3));
         
         if (isButtonPressed(x, y, cellW, cellH)) {
           toggleSequencerStep(track, step);
