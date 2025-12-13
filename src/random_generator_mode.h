@@ -139,6 +139,54 @@ void handleRandomGeneratorMode() {
     return;
   }
   
+  // Calculate button positions for press feedback
+  int y1 = 55;
+  int y2 = y1 + 22 + 5;
+  int y3 = y2 + 22 + 5;
+  int y4 = y3 + 22 + 5;
+  
+  // Check all button press states
+  bool playPressed = touch.isPressed && isButtonPressed(10, y1, 60, 25);
+  bool keyUpPressed = touch.isPressed && isButtonPressed(150, y1, 25, 25);
+  bool keyDownPressed = touch.isPressed && isButtonPressed(180, y1, 25, 25);
+  bool scalePressed = touch.isPressed && isButtonPressed(220, y1, 80, 25);
+  
+  bool minOctDownPressed = touch.isPressed && isButtonPressed(70, y2, 35, 25);
+  bool minOctUpPressed = touch.isPressed && isButtonPressed(110, y2, 35, 25);
+  bool maxOctDownPressed = touch.isPressed && isButtonPressed(150, y2, 35, 25);
+  bool maxOctUpPressed = touch.isPressed && isButtonPressed(190, y2, 35, 25);
+  
+  bool probDownPressed = touch.isPressed && isButtonPressed(85, y3, 25, 25);
+  bool probUpPressed = touch.isPressed && isButtonPressed(115, y3, 25, 25);
+  
+  bool bpmDownPressed = touch.isPressed && isButtonPressed(65, y4, 25, 25);
+  bool bpmUpPressed = touch.isPressed && isButtonPressed(95, y4, 25, 25);
+  bool subdivLeftPressed = touch.isPressed && isButtonPressed(190, y4, 25, 25);
+  bool subdivRightPressed = touch.isPressed && isButtonPressed(220, y4, 25, 25);
+  
+  // Draw buttons with press feedback
+  drawRoundButton(10, y1, 60, 25, randomGen.isPlaying ? "STOP" : "PLAY", 
+                 randomGen.isPlaying ? THEME_ERROR : THEME_SUCCESS, playPressed);
+  
+  String rootName = getNoteNameFromMIDI(randomGen.rootNote);
+  drawRoundButton(110, y1, 35, 25, rootName, THEME_PRIMARY, false);
+  drawRoundButton(150, y1, 25, 25, "+", THEME_SECONDARY, keyUpPressed);
+  drawRoundButton(180, y1, 25, 25, "-", THEME_SECONDARY, keyDownPressed);
+  drawRoundButton(220, y1, 80, 25, scales[randomGen.scaleType].name, THEME_ACCENT, scalePressed);
+  
+  drawRoundButton(70, y2, 35, 25, "MIN-", THEME_SECONDARY, minOctDownPressed);
+  drawRoundButton(110, y2, 35, 25, "MIN+", THEME_SECONDARY, minOctUpPressed);
+  drawRoundButton(150, y2, 35, 25, "MAX-", THEME_SECONDARY, maxOctDownPressed);
+  drawRoundButton(190, y2, 35, 25, "MAX+", THEME_SECONDARY, maxOctUpPressed);
+  
+  drawRoundButton(85, y3, 25, 25, "-", THEME_SECONDARY, probDownPressed);
+  drawRoundButton(115, y3, 25, 25, "+", THEME_SECONDARY, probUpPressed);
+  
+  drawRoundButton(65, y4, 25, 25, "-", THEME_SECONDARY, bpmDownPressed);
+  drawRoundButton(95, y4, 25, 25, "+", THEME_SECONDARY, bpmUpPressed);
+  drawRoundButton(190, y4, 25, 25, "<", THEME_SECONDARY, subdivLeftPressed);
+  drawRoundButton(220, y4, 25, 25, ">", THEME_SECONDARY, subdivRightPressed);
+  
   if (touch.justPressed) {
     int y = 55;
     int btnHeight = 45;
