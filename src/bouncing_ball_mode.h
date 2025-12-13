@@ -14,10 +14,10 @@ struct Ball {
   bool active;
 };
 
-// Play area constants for 480x320 screen
-#define PLAY_AREA_MARGIN_X 80
-#define PLAY_AREA_MARGIN_Y_TOP 70
-#define PLAY_AREA_MARGIN_Y_BOTTOM 100
+// Play area constants - calculated based on screen size
+#define PLAY_AREA_MARGIN_X (SCREEN_WIDTH / 6)
+#define PLAY_AREA_MARGIN_Y_TOP (CONTENT_TOP + 20)
+#define PLAY_AREA_MARGIN_Y_BOTTOM (SCREEN_HEIGHT > 250 ? 100 : 80)
 #define WALL_THICKNESS 4
 
 #define MAX_BALLS 4
@@ -69,22 +69,27 @@ void drawBouncingBallMode() {
   tft.fillScreen(THEME_BG);
   drawHeader("ZEN", "Ambient Bouncing");
   
-  // Controls - positioned at bottom with proper spacing
+  // Calculate control button layout from screen dimensions
+  int btnSpacing = 10;
   int btnY = SCREEN_HEIGHT - 50;
+  int btnH = 30;
   int statusY = SCREEN_HEIGHT - 75;
-  drawRoundButton(10, btnY, 50, 30, "ADD", THEME_SUCCESS);
-  drawRoundButton(70, btnY, 60, 30, "RESET", THEME_WARNING);
-  drawRoundButton(140, btnY, 60, 30, "SCALE", THEME_ACCENT);
-  drawRoundButton(210, btnY, 50, 30, "KEY-", THEME_SECONDARY);
-  drawRoundButton(270, btnY, 50, 30, "KEY+", THEME_SECONDARY);
-  drawRoundButton(330, btnY, 50, 30, "OCT", THEME_PRIMARY);
+  int availableWidth = SCREEN_WIDTH - (2 * btnSpacing);
+  int btn1W = (availableWidth - (5 * btnSpacing)) / 6;
+  
+  drawRoundButton(btnSpacing, btnY, btn1W, btnH, "ADD", THEME_SUCCESS);
+  drawRoundButton(btnSpacing * 2 + btn1W, btnY, btn1W, btnH, "RESET", THEME_WARNING);
+  drawRoundButton(btnSpacing * 3 + btn1W * 2, btnY, btn1W + 10, btnH, "SCALE", THEME_ACCENT);
+  drawRoundButton(btnSpacing * 4 + btn1W * 3 + 10, btnY, btn1W, btnH, "KEY-", THEME_SECONDARY);
+  drawRoundButton(btnSpacing * 5 + btn1W * 4 + 10, btnY, btn1W, btnH, "KEY+", THEME_SECONDARY);
+  drawRoundButton(btnSpacing * 6 + btn1W * 5 + 10, btnY, btn1W, btnH, "OCT", THEME_PRIMARY);
   
   // Status display
   tft.setTextColor(THEME_TEXT_DIM, THEME_BG);
   String keyName = getNoteNameFromMIDI(ballKey);
-  tft.drawString(keyName + " " + scales[ballScale].name, 10, statusY, 2);
-  tft.drawString("Oct:" + String(ballOctave), 240, statusY, 2);
-  tft.drawString("Balls:" + String(numActiveBalls), 340, statusY, 2);
+  tft.drawString(keyName + " " + scales[ballScale].name, btnSpacing, statusY, 2);
+  tft.drawString("Oct:" + String(ballOctave), SCREEN_WIDTH / 2, statusY, 2);
+  tft.drawString("Balls:" + String(numActiveBalls), SCREEN_WIDTH - 80, statusY, 2);
   
   drawWalls();
   drawBalls();
@@ -187,11 +192,16 @@ void handleBouncingBallMode() {
     return;
   }
   
+  // Calculate button layout from screen dimensions
+  int btnSpacing = 10;
   int btnY = SCREEN_HEIGHT - 50;
+  int btnH = 30;
+  int availableWidth = SCREEN_WIDTH - (2 * btnSpacing);
+  int btn1W = (availableWidth - (5 * btnSpacing)) / 6;
   
   if (touch.justPressed) {
     // Add ball button
-    if (isButtonPressed(10, btnY, 50, 30)) {
+    if (isButtonPressed(btnSpacing, btnY, btn1W, btnH)) {
       if (numActiveBalls < MAX_BALLS) {
         numActiveBalls++;
         initializeBalls();
@@ -201,7 +211,7 @@ void handleBouncingBallMode() {
     }
     
     // Reset button
-    if (isButtonPressed(70, btnY, 60, 30)) {
+    if (isButtonPressed(btnSpacing * 2 + btn1W, btnY, btn1W, btnH)) {
       numActiveBalls = 1;
       initializeBalls();
       drawBouncingBallMode();
@@ -209,7 +219,7 @@ void handleBouncingBallMode() {
     }
     
     // Scale button
-    if (isButtonPressed(140, btnY, 60, 30)) {
+    if (isButtonPressed(btnSpacing * 3 + btn1W * 2, btnY, btn1W + 10, btnH)) {
       ballScale = (ballScale + 1) % NUM_SCALES;
       initializeWalls();
       drawBouncingBallMode();
@@ -217,14 +227,14 @@ void handleBouncingBallMode() {
     }
     
     // Key controls
-    if (isButtonPressed(210, btnY, 50, 30)) {
+    if (isButtonPressed(btnSpacing * 4 + btn1W * 3 + 10, btnY, btn1W, btnH)) {
       ballKey = (ballKey - 1 + 12) % 12;
       initializeWalls();
       drawBouncingBallMode();
       return;
     }
     
-    if (isButtonPressed(270, btnY, 50, 30)) {
+    if (isButtonPressed(btnSpacing * 5 + btn1W * 4 + 10, btnY, btn1W, btnH)) {
       ballKey = (ballKey + 1) % 12;
       initializeWalls();
       drawBouncingBallMode();
@@ -232,7 +242,7 @@ void handleBouncingBallMode() {
     }
     
     // Octave button
-    if (isButtonPressed(330, btnY, 50, 30)) {
+    if (isButtonPressed(btnSpacing * 6 + btn1W * 5 + 10, btnY, btn1W, btnH)) {
       ballOctave = (ballOctave == 7) ? 2 : ballOctave + 1;
       initializeWalls();
       drawBouncingBallMode();

@@ -80,20 +80,28 @@ void drawPhysicsDropMode() {
   tft.fillScreen(THEME_BG);
   drawHeader("DROP", platformMode ? "Platform Edit" : "Tap to Drop");
   
+  // Calculate control button layout from screen dimensions
+  int btnSpacing = 10;
+  int statusY = SCREEN_HEIGHT - 110;
+  int btnY = SCREEN_HEIGHT - 80;
+  int btnH = 30;
+  int availableWidth = SCREEN_WIDTH - (2 * btnSpacing);
+  int btn1W = (availableWidth - (5 * btnSpacing)) / 6;
+  
   // Controls
-  drawRoundButton(10, 200, 40, 25, platformMode ? "DROP" : "EDIT", THEME_WARNING);
-  drawRoundButton(60, 200, 40, 25, "CLEAR", THEME_ERROR);
-  drawRoundButton(110, 200, 50, 25, "SCALE", THEME_ACCENT);
-  drawRoundButton(170, 200, 40, 25, "KEY-", THEME_SECONDARY);
-  drawRoundButton(220, 200, 40, 25, "KEY+", THEME_SECONDARY);
-  drawRoundButton(270, 200, 40, 25, "OCT", THEME_PRIMARY);
+  drawRoundButton(btnSpacing, btnY, btn1W, btnH, platformMode ? "DROP" : "EDIT", THEME_WARNING);
+  drawRoundButton(btnSpacing * 2 + btn1W, btnY, btn1W, btnH, "CLEAR", THEME_ERROR);
+  drawRoundButton(btnSpacing * 3 + btn1W * 2, btnY, btn1W + 10, btnH, "SCALE", THEME_ACCENT);
+  drawRoundButton(btnSpacing * 4 + btn1W * 3 + 10, btnY, btn1W, btnH, "KEY-", THEME_SECONDARY);
+  drawRoundButton(btnSpacing * 5 + btn1W * 4 + 10, btnY, btn1W, btnH, "KEY+", THEME_SECONDARY);
+  drawRoundButton(btnSpacing * 6 + btn1W * 5 + 10, btnY, btn1W, btnH, "OCT", THEME_PRIMARY);
   
   // Status display
   tft.setTextColor(THEME_TEXT_DIM, THEME_BG);
   String keyName = getNoteNameFromMIDI(dropKey);
-  tft.drawString(keyName + " " + scales[dropScale].name, 10, 180, 1);
-  tft.drawString("Oct:" + String(dropOctave), 150, 180, 1);
-  tft.drawString("Balls:" + String(numActiveDropBalls), 220, 180, 1);
+  tft.drawString(keyName + " " + scales[dropScale].name, btnSpacing, statusY, 1);
+  tft.drawString("Oct:" + String(dropOctave), SCREEN_WIDTH / 2 - 30, statusY, 1);
+  tft.drawString("Balls:" + String(numActiveDropBalls), SCREEN_WIDTH - 80, statusY, 1);
   
   drawPlatforms();
   drawDropBalls();
@@ -149,16 +157,23 @@ void handlePhysicsDropMode() {
     return;
   }
   
+  // Calculate button layout from screen dimensions
+  int btnSpacing = 10;
+  int btnY = SCREEN_HEIGHT - 80;
+  int btnH = 30;
+  int availableWidth = SCREEN_WIDTH - (2 * btnSpacing);
+  int btn1W = (availableWidth - (5 * btnSpacing)) / 6;
+  
   if (touch.justPressed) {
     // Mode toggle
-    if (isButtonPressed(10, 200, 40, 25)) {
+    if (isButtonPressed(btnSpacing, btnY, btn1W, btnH)) {
       platformMode = !platformMode;
       drawPhysicsDropMode();
       return;
     }
     
     // Clear button
-    if (isButtonPressed(60, 200, 40, 25)) {
+    if (isButtonPressed(btnSpacing * 2 + btn1W, btnY, btn1W, btnH)) {
       for (int i = 0; i < MAX_DROP_BALLS; i++) {
         dropBalls[i].active = false;
       }
@@ -169,34 +184,36 @@ void handlePhysicsDropMode() {
     }
     
     // Scale button
-    if (isButtonPressed(110, 200, 50, 25)) {
+    if (isButtonPressed(btnSpacing * 3 + btn1W * 2, btnY, btn1W + 10, btnH)) {
       dropScale = (dropScale + 1) % NUM_SCALES;
       drawPhysicsDropMode();
       return;
     }
     
     // Key controls
-    if (isButtonPressed(170, 200, 40, 25)) {
+    if (isButtonPressed(btnSpacing * 4 + btn1W * 3 + 10, btnY, btn1W, btnH)) {
       dropKey = (dropKey - 1 + 12) % 12;
       drawPhysicsDropMode();
       return;
     }
     
-    if (isButtonPressed(220, 200, 40, 25)) {
+    if (isButtonPressed(btnSpacing * 5 + btn1W * 4 + 10, btnY, btn1W, btnH)) {
       dropKey = (dropKey + 1) % 12;
       drawPhysicsDropMode();
       return;
     }
     
     // Octave button
-    if (isButtonPressed(270, 200, 40, 25)) {
+    if (isButtonPressed(btnSpacing * 6 + btn1W * 5 + 10, btnY, btn1W, btnH)) {
       dropOctave = (dropOctave == 7) ? 2 : dropOctave + 1;
       drawPhysicsDropMode();
       return;
     }
     
-    // Touch in play area
-    if (touch.y >= 60 && touch.y <= 175) {
+    // Touch in play area - calculated dynamically
+    int playTop = CONTENT_TOP + 10;
+    int playBottom = SCREEN_HEIGHT - 120;
+    if (touch.y >= playTop && touch.y <= playBottom) {
       if (platformMode) {
         // Add platform
         addPlatform(touch.x, touch.y);
