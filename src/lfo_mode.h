@@ -60,24 +60,24 @@ void drawLFOControls() {
   
   // Play/Stop and Rate
   drawRoundButton(15, y, 80, 30, lfo.isRunning ? "STOP" : "START", 
-                 lfo.isRunning ? THEME_ERROR : THEME_SUCCESS);
+                 lfo.isRunning ? THEME_ERROR : THEME_SUCCESS, false);
   
   tft.setTextColor(THEME_TEXT, THEME_BG);
   tft.drawString("Rate:", 110, y + 8, 2);
   tft.drawString(String(lfo.rate, 1) + "Hz", 180, y + 8, 2);
-  drawRoundButton(260, y, 35, 30, "-", THEME_SECONDARY);
-  drawRoundButton(305, y, 35, 30, "+", THEME_SECONDARY);
+  drawRoundButton(260, y, 35, 30, "-", THEME_SECONDARY, false);
+  drawRoundButton(305, y, 35, 30, "+", THEME_SECONDARY, false);
   
   // Waveform selector
-  drawRoundButton(360, y, 90, 30, waveNames[lfo.waveform], THEME_ACCENT);
+  drawRoundButton(360, y, 90, 30, waveNames[lfo.waveform], THEME_ACCENT, false);
   
   y += spacing;
   
   // Amount
   tft.drawString("Amount:", 10, y + 6, 1);
   tft.drawString(String(lfo.amount), 60, y + 6, 1);
-  drawRoundButton(85, y, 25, 25, "-", THEME_SECONDARY);
-  drawRoundButton(115, y, 25, 25, "+", THEME_SECONDARY);
+  drawRoundButton(85, y, 25, 25, "-", THEME_SECONDARY, false);
+  drawRoundButton(115, y, 25, 25, "+", THEME_SECONDARY, false);
   
   // Amount bar
   int barW = 100;
@@ -96,9 +96,9 @@ void drawLFOControls() {
     tft.drawString("CC" + String(lfo.ccTarget), 60, y + 6, 1);
   }
   
-  drawRoundButton(110, y, 25, 25, "-", THEME_SECONDARY);
-  drawRoundButton(140, y, 25, 25, "+", THEME_SECONDARY);
-  drawRoundButton(180, y, 70, 25, "PITCH", lfo.pitchWheelMode ? THEME_PRIMARY : THEME_WARNING);
+  drawRoundButton(110, y, 25, 25, "-", THEME_SECONDARY, false);
+  drawRoundButton(140, y, 25, 25, "+", THEME_SECONDARY, false);
+  drawRoundButton(180, y, 70, 25, "PITCH", lfo.pitchWheelMode ? THEME_PRIMARY : THEME_WARNING, false);
   
   y += spacing;
   
@@ -161,12 +161,44 @@ void handleLFOMode() {
     return;
   }
   
+  // Calculate button positions for press feedback
+  int y1 = 55;
+  int y2 = y1 + 30;
+  int y3 = y2 + 30;
+  
+  // Check button press states
+  bool startPressed = touch.isPressed && isButtonPressed(15, y1, 80, 30);
+  bool rateDownPressed = touch.isPressed && isButtonPressed(260, y1, 35, 30);
+  bool rateUpPressed = touch.isPressed && isButtonPressed(305, y1, 35, 30);
+  bool wavePressed = touch.isPressed && isButtonPressed(360, y1, 90, 30);
+  
+  bool amtDownPressed = touch.isPressed && isButtonPressed(85, y2, 25, 25);
+  bool amtUpPressed = touch.isPressed && isButtonPressed(115, y2, 25, 25);
+  
+  bool tgtDownPressed = touch.isPressed && isButtonPressed(110, y3, 25, 25);
+  bool tgtUpPressed = touch.isPressed && isButtonPressed(140, y3, 25, 25);
+  bool pitchPressed = touch.isPressed && isButtonPressed(180, y3, 70, 25);
+  
+  // Draw buttons with press feedback
+  drawRoundButton(15, y1, 80, 30, lfo.isRunning ? "STOP" : "START", 
+                 lfo.isRunning ? THEME_ERROR : THEME_SUCCESS, startPressed);
+  drawRoundButton(260, y1, 35, 30, "-", THEME_SECONDARY, rateDownPressed);
+  drawRoundButton(305, y1, 35, 30, "+", THEME_SECONDARY, rateUpPressed);
+  drawRoundButton(360, y1, 90, 30, waveNames[lfo.waveform], THEME_ACCENT, wavePressed);
+  
+  drawRoundButton(85, y2, 25, 25, "-", THEME_SECONDARY, amtDownPressed);
+  drawRoundButton(115, y2, 25, 25, "+", THEME_SECONDARY, amtUpPressed);
+  
+  drawRoundButton(110, y3, 25, 25, "-", THEME_SECONDARY, tgtDownPressed);
+  drawRoundButton(140, y3, 25, 25, "+", THEME_SECONDARY, tgtUpPressed);
+  drawRoundButton(180, y3, 70, 25, "PITCH", lfo.pitchWheelMode ? THEME_PRIMARY : THEME_WARNING, pitchPressed);
+  
   if (touch.justPressed) {
     int y = 55;
     int spacing = 30;
     
     // Start/Stop
-    if (isButtonPressed(15, y, 80, 30)) {
+    if (startPressed) {
       lfo.isRunning = !lfo.isRunning;
       if (lfo.isRunning) {
         lfo.phase = 0.0;
@@ -177,19 +209,19 @@ void handleLFOMode() {
     }
     
     // Rate controls
-    if (isButtonPressed(260, y, 35, 30)) {
+    if (rateDownPressed) {
       lfo.rate = max(0.1, lfo.rate - 0.1);
       drawLFOControls();
       return;
     }
-    if (isButtonPressed(305, y, 35, 30)) {
+    if (rateUpPressed) {
       lfo.rate = min(10.0, lfo.rate + 0.1);
       drawLFOControls();
       return;
     }
     
     // Waveform selector
-    if (isButtonPressed(360, y, 90, 30)) {
+    if (wavePressed) {
       lfo.waveform = (lfo.waveform + 1) % 4;
       drawLFOMode();
       return;
@@ -198,12 +230,12 @@ void handleLFOMode() {
     y += spacing;
     
     // Amount controls
-    if (isButtonPressed(85, y, 25, 25)) {
+    if (amtDownPressed) {
       lfo.amount = max(0, lfo.amount - 5);
       drawLFOControls();
       return;
     }
-    if (isButtonPressed(115, y, 25, 25)) {
+    if (amtUpPressed) {
       lfo.amount = min(127, lfo.amount + 5);
       drawLFOControls();
       return;
@@ -212,7 +244,7 @@ void handleLFOMode() {
     y += spacing;
     
     // Target controls
-    if (isButtonPressed(110, y, 25, 25)) {
+    if (tgtDownPressed) {
       if (lfo.pitchWheelMode) {
         lfo.pitchWheelMode = false;
         lfo.ccTarget = 1; // Back to modulation wheel
@@ -222,7 +254,7 @@ void handleLFOMode() {
       drawLFOMode();
       return;
     }
-    if (isButtonPressed(140, y, 25, 25)) {
+    if (tgtUpPressed) {
       if (!lfo.pitchWheelMode) {
         lfo.ccTarget = min(127, lfo.ccTarget + 1);
       }
@@ -231,7 +263,7 @@ void handleLFOMode() {
     }
     
     // Pitchwheel mode toggle
-    if (isButtonPressed(180, y, 70, 25)) {
+    if (pitchPressed) {
       lfo.pitchWheelMode = !lfo.pitchWheelMode;
       drawLFOMode();
       return;

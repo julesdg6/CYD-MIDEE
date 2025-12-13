@@ -72,12 +72,12 @@ void drawBouncingBallMode() {
   // Controls - positioned at bottom with proper spacing
   int btnY = SCREEN_HEIGHT - 50;
   int statusY = SCREEN_HEIGHT - 75;
-  drawRoundButton(10, btnY, 50, 30, "ADD", THEME_SUCCESS);
-  drawRoundButton(70, btnY, 60, 30, "RESET", THEME_WARNING);
-  drawRoundButton(140, btnY, 60, 30, "SCALE", THEME_ACCENT);
-  drawRoundButton(210, btnY, 50, 30, "KEY-", THEME_SECONDARY);
-  drawRoundButton(270, btnY, 50, 30, "KEY+", THEME_SECONDARY);
-  drawRoundButton(330, btnY, 50, 30, "OCT", THEME_PRIMARY);
+  drawRoundButton(10, btnY, 50, 30, "ADD", THEME_SUCCESS, false);
+  drawRoundButton(70, btnY, 60, 30, "RESET", THEME_WARNING, false);
+  drawRoundButton(140, btnY, 60, 30, "SCALE", THEME_ACCENT, false);
+  drawRoundButton(210, btnY, 50, 30, "KEY-", THEME_SECONDARY, false);
+  drawRoundButton(270, btnY, 50, 30, "KEY+", THEME_SECONDARY, false);
+  drawRoundButton(330, btnY, 50, 30, "OCT", THEME_PRIMARY, false);
   
   // Status display
   tft.setTextColor(THEME_TEXT_DIM, THEME_BG);
@@ -189,9 +189,24 @@ void handleBouncingBallMode() {
   
   int btnY = SCREEN_HEIGHT - 50;
   
+  // Draw control buttons with press feedback
+  bool addPressed = touch.isPressed && isButtonPressed(10, btnY, 50, 30);
+  bool resetPressed = touch.isPressed && isButtonPressed(70, btnY, 60, 30);
+  bool scalePressed = touch.isPressed && isButtonPressed(140, btnY, 60, 30);
+  bool keyDownPressed = touch.isPressed && isButtonPressed(210, btnY, 50, 30);
+  bool keyUpPressed = touch.isPressed && isButtonPressed(270, btnY, 50, 30);
+  bool octPressed = touch.isPressed && isButtonPressed(330, btnY, 50, 30);
+  
+  drawRoundButton(10, btnY, 50, 30, "ADD", THEME_SUCCESS, addPressed);
+  drawRoundButton(70, btnY, 60, 30, "RESET", THEME_WARNING, resetPressed);
+  drawRoundButton(140, btnY, 60, 30, "SCALE", THEME_ACCENT, scalePressed);
+  drawRoundButton(210, btnY, 50, 30, "KEY-", THEME_SECONDARY, keyDownPressed);
+  drawRoundButton(270, btnY, 50, 30, "KEY+", THEME_SECONDARY, keyUpPressed);
+  drawRoundButton(330, btnY, 50, 30, "OCT", THEME_PRIMARY, octPressed);
+  
   if (touch.justPressed) {
     // Add ball button
-    if (isButtonPressed(10, btnY, 50, 30)) {
+    if (addPressed) {
       if (numActiveBalls < MAX_BALLS) {
         numActiveBalls++;
         initializeBalls();
@@ -201,7 +216,7 @@ void handleBouncingBallMode() {
     }
     
     // Reset button
-    if (isButtonPressed(70, btnY, 60, 30)) {
+    if (resetPressed) {
       numActiveBalls = 1;
       initializeBalls();
       drawBouncingBallMode();
@@ -209,7 +224,7 @@ void handleBouncingBallMode() {
     }
     
     // Scale button
-    if (isButtonPressed(140, btnY, 60, 30)) {
+    if (scalePressed) {
       ballScale = (ballScale + 1) % NUM_SCALES;
       initializeWalls();
       drawBouncingBallMode();
@@ -217,14 +232,14 @@ void handleBouncingBallMode() {
     }
     
     // Key controls
-    if (isButtonPressed(210, btnY, 50, 30)) {
+    if (keyDownPressed) {
       ballKey = (ballKey - 1 + 12) % 12;
       initializeWalls();
       drawBouncingBallMode();
       return;
     }
     
-    if (isButtonPressed(270, btnY, 50, 30)) {
+    if (keyUpPressed) {
       ballKey = (ballKey + 1) % 12;
       initializeWalls();
       drawBouncingBallMode();
@@ -232,7 +247,7 @@ void handleBouncingBallMode() {
     }
     
     // Octave button
-    if (isButtonPressed(330, btnY, 50, 30)) {
+    if (octPressed) {
       ballOctave = (ballOctave == 7) ? 2 : ballOctave + 1;
       initializeWalls();
       drawBouncingBallMode();

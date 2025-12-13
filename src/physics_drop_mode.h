@@ -81,12 +81,12 @@ void drawPhysicsDropMode() {
   drawHeader("DROP", platformMode ? "Platform Edit" : "Tap to Drop");
   
   // Controls
-  drawRoundButton(10, 200, 40, 25, platformMode ? "DROP" : "EDIT", THEME_WARNING);
-  drawRoundButton(60, 200, 40, 25, "CLEAR", THEME_ERROR);
-  drawRoundButton(110, 200, 50, 25, "SCALE", THEME_ACCENT);
-  drawRoundButton(170, 200, 40, 25, "KEY-", THEME_SECONDARY);
-  drawRoundButton(220, 200, 40, 25, "KEY+", THEME_SECONDARY);
-  drawRoundButton(270, 200, 40, 25, "OCT", THEME_PRIMARY);
+  drawRoundButton(10, 200, 40, 25, platformMode ? "DROP" : "EDIT", THEME_WARNING, false);
+  drawRoundButton(60, 200, 40, 25, "CLEAR", THEME_ERROR, false);
+  drawRoundButton(110, 200, 50, 25, "SCALE", THEME_ACCENT, false);
+  drawRoundButton(170, 200, 40, 25, "KEY-", THEME_SECONDARY, false);
+  drawRoundButton(220, 200, 40, 25, "KEY+", THEME_SECONDARY, false);
+  drawRoundButton(270, 200, 40, 25, "OCT", THEME_PRIMARY, false);
   
   // Status display
   tft.setTextColor(THEME_TEXT_DIM, THEME_BG);
@@ -149,16 +149,31 @@ void handlePhysicsDropMode() {
     return;
   }
   
+  // Draw control buttons with press feedback
+  bool modePressed = touch.isPressed && isButtonPressed(10, 200, 40, 25);
+  bool clearPressed = touch.isPressed && isButtonPressed(60, 200, 40, 25);
+  bool scalePressed = touch.isPressed && isButtonPressed(110, 200, 50, 25);
+  bool keyDownPressed = touch.isPressed && isButtonPressed(170, 200, 40, 25);
+  bool keyUpPressed = touch.isPressed && isButtonPressed(220, 200, 40, 25);
+  bool octPressed = touch.isPressed && isButtonPressed(270, 200, 40, 25);
+  
+  drawRoundButton(10, 200, 40, 25, platformMode ? "DROP" : "EDIT", THEME_WARNING, modePressed);
+  drawRoundButton(60, 200, 40, 25, "CLEAR", THEME_ERROR, clearPressed);
+  drawRoundButton(110, 200, 50, 25, "SCALE", THEME_ACCENT, scalePressed);
+  drawRoundButton(170, 200, 40, 25, "KEY-", THEME_SECONDARY, keyDownPressed);
+  drawRoundButton(220, 200, 40, 25, "KEY+", THEME_SECONDARY, keyUpPressed);
+  drawRoundButton(270, 200, 40, 25, "OCT", THEME_PRIMARY, octPressed);
+  
   if (touch.justPressed) {
     // Mode toggle
-    if (isButtonPressed(10, 200, 40, 25)) {
+    if (modePressed) {
       platformMode = !platformMode;
       drawPhysicsDropMode();
       return;
     }
     
     // Clear button
-    if (isButtonPressed(60, 200, 40, 25)) {
+    if (clearPressed) {
       for (int i = 0; i < MAX_DROP_BALLS; i++) {
         dropBalls[i].active = false;
       }
@@ -169,27 +184,27 @@ void handlePhysicsDropMode() {
     }
     
     // Scale button
-    if (isButtonPressed(110, 200, 50, 25)) {
+    if (scalePressed) {
       dropScale = (dropScale + 1) % NUM_SCALES;
       drawPhysicsDropMode();
       return;
     }
     
     // Key controls
-    if (isButtonPressed(170, 200, 40, 25)) {
+    if (keyDownPressed) {
       dropKey = (dropKey - 1 + 12) % 12;
       drawPhysicsDropMode();
       return;
     }
     
-    if (isButtonPressed(220, 200, 40, 25)) {
+    if (keyUpPressed) {
       dropKey = (dropKey + 1) % 12;
       drawPhysicsDropMode();
       return;
     }
     
     // Octave button
-    if (isButtonPressed(270, 200, 40, 25)) {
+    if (octPressed) {
       dropOctave = (dropOctave == 7) ? 2 : dropOctave + 1;
       drawPhysicsDropMode();
       return;
