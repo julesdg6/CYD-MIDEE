@@ -89,11 +89,12 @@ void drawArpControls() {
   y += btnHeight + spacing;
   
   // Piano octave controls
+  int pianoOctY = y - 8;  // Slight adjustment for better visual alignment
   tft.setTextColor(THEME_TEXT, THEME_BG);
   tft.drawString("Piano Oct:", 10, y, 1);
   tft.drawString(String(pianoOctave), 80, y, 1);
-  drawRoundButton(100, y - 8, 45, btnHeight, "-", THEME_SECONDARY);
-  drawRoundButton(150, y - 8, 45, btnHeight, "+", THEME_SECONDARY);
+  drawRoundButton(100, pianoOctY, 45, btnHeight, "-", THEME_SECONDARY);
+  drawRoundButton(150, pianoOctY, 45, btnHeight, "+", THEME_SECONDARY);
   
   // Current note display
   if (arp.currentNote != -1) {
@@ -215,13 +216,14 @@ void handleArpeggiatorMode() {
     y += btnHeight + spacing;
     
     // Piano octave controls
-    if (isButtonPressed(100, y - 8, 45, btnHeight)) {
+    int pianoOctY = y - 8;  // Slight adjustment for better visual alignment
+    if (isButtonPressed(100, pianoOctY, 45, btnHeight)) {
       pianoOctave = max(1, pianoOctave - 1);
       drawPianoKeys();
       drawArpControls();
       return;
     }
-    if (isButtonPressed(150, y - 8, 45, btnHeight)) {
+    if (isButtonPressed(150, pianoOctY, 45, btnHeight)) {
       pianoOctave = min(7, pianoOctave + 1);
       drawPianoKeys();
       drawArpControls();

@@ -165,8 +165,10 @@ void drawCCControls() {
   xyBtnXccDown.draw(true);
   xyBtnXccUp.draw(true);
   
+  // X CC value display position
+  int xValueY = PAD_Y + 20 + (btnHeight * 2) + btnSpacing + 8;
   tft.setTextColor(THEME_TEXT, THEME_BG);
-  tft.drawCentreString(String(xCC), controlsX + btnWidth/2, PAD_Y + 20 + btnHeight + btnSpacing + btnHeight + 8, 2);
+  tft.drawCentreString(String(xCC), controlsX + btnWidth/2, xValueY, 2);
   
   // Y CC controls
   tft.setTextColor(THEME_ACCENT, THEME_BG);
@@ -175,8 +177,10 @@ void drawCCControls() {
   xyBtnYccDown.draw(true);
   xyBtnYccUp.draw(true);
   
+  // Y CC value display position
+  int yValueY = PAD_Y + 125 + (btnHeight * 2) + btnSpacing + 8;
   tft.setTextColor(THEME_TEXT, THEME_BG);
-  tft.drawCentreString(String(yCC), controlsX + btnWidth/2, PAD_Y + 125 + btnHeight + btnSpacing + btnHeight + 8, 2);
+  tft.drawCentreString(String(yCC), controlsX + btnWidth/2, yValueY, 2);
   
   // Reset button removed per user request
 }
