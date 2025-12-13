@@ -63,11 +63,10 @@ void drawGridPianoMode() {
     }
   }
   
-  // Octave controls - positioned at bottom with spacing
-  int ctrlY = SCREEN_HEIGHT - 50;
-  int btnSpacing = 10;
-  drawRoundButton(btnSpacing, ctrlY, 60, 35, "OCT-", THEME_SECONDARY);
-  drawRoundButton(btnSpacing * 2 + 60, ctrlY, 60, 35, "OCT+", THEME_SECONDARY);
+  // Octave controls
+  int ctrlY = SCALED_H(235);
+  drawRoundButton(SCALED_W(10), ctrlY, BTN_SMALL_W, BTN_SMALL_H, "OCT-", THEME_SECONDARY, false);
+  drawRoundButton(SCALED_W(80), ctrlY, BTN_SMALL_W, BTN_SMALL_H, "OCT+", THEME_SECONDARY, false);
   
   // Octave display
   tft.setTextColor(THEME_TEXT_DIM, THEME_BG);
@@ -126,19 +125,23 @@ void handleGridPianoMode() {
     return;
   }
   
-  // Calculate button positions
-  int ctrlY = SCREEN_HEIGHT - 50;
-  int btnSpacing = 10;
+  // Draw octave control buttons with press feedback
+  int ctrlY = SCALED_H(235);
+  bool octDownPressed = touch.isPressed && isButtonPressed(SCALED_W(10), ctrlY, BTN_SMALL_W, BTN_SMALL_H);
+  bool octUpPressed = touch.isPressed && isButtonPressed(SCALED_W(80), ctrlY, BTN_SMALL_W, BTN_SMALL_H);
+  
+  drawRoundButton(SCALED_W(10), ctrlY, BTN_SMALL_W, BTN_SMALL_H, "OCT-", THEME_SECONDARY, octDownPressed);
+  drawRoundButton(SCALED_W(80), ctrlY, BTN_SMALL_W, BTN_SMALL_H, "OCT+", THEME_SECONDARY, octUpPressed);
   
   if (touch.justPressed) {
     // Octave controls
-    if (isButtonPressed(btnSpacing, ctrlY, 60, 35)) {
+    if (octDownPressed) {
       gridOctave = max(1, gridOctave - 1);
       calculateGridLayout();
       drawGridPianoMode();
       return;
     }
-    if (isButtonPressed(btnSpacing * 2 + 60, ctrlY, 60, 35)) {
+    if (octUpPressed) {
       gridOctave = min(6, gridOctave + 1);
       calculateGridLayout();
       drawGridPianoMode();

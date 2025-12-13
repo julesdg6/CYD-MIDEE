@@ -105,17 +105,8 @@ void initializeGridsMode() {
 void drawGridsMode() {
   tft.fillScreen(THEME_BG);
   
-  // Header
-  tft.setTextColor(THEME_TEXT, THEME_BG);
-  tft.drawString("GRIDS", 10, 10, 4);
-  
-  // Status
-  tft.setTextColor(THEME_TEXT_DIM, THEME_BG);
-  String status = grids.playing ? "PLAYING" : "STOPPED";
-  tft.drawRightString(status, 470, 10, 2);
-  
-  // BPM display
-  tft.drawRightString("BPM: " + String((int)grids.bpm), 470, 30, 2);
+  // Unified header with BLE, SD, and BPM indicators
+  drawModuleHeader("GRIDS");
   
   int y = CONTENT_TOP;
   
@@ -180,17 +171,11 @@ void drawGridsMode() {
   int btnH = 50;
   int btnW = (SCREEN_WIDTH - (6 * btnSpacing)) / 5;
   
-  int btn1X = btnSpacing;
-  int btn2X = btnSpacing * 2 + btnW;
-  int btn3X = btnSpacing * 3 + btnW * 2;
-  int btn4X = btnSpacing * 4 + btnW * 3;
-  int btn5X = btnSpacing * 5 + btnW * 4;
-  
-  drawRoundButton(btn1X, btnY, btnW, btnH, grids.playing ? "STOP" : "PLAY", THEME_PRIMARY, THEME_TEXT);
-  drawRoundButton(btn2X, btnY, btnW, btnH, "BPM-", THEME_SECONDARY, THEME_TEXT);
-  drawRoundButton(btn3X, btnY, btnW, btnH, "BPM+", THEME_SECONDARY, THEME_TEXT);
-  drawRoundButton(btn4X, btnY, btnW, btnH, "RNDM", THEME_ACCENT, THEME_TEXT);
-  drawRoundButton(btn5X, btnY, btnW, btnH, "<<", THEME_TEXT_DIM, THEME_TEXT);
+  drawRoundButton(10, btnY, btnW, btnH, grids.playing ? "STOP" : "PLAY", THEME_PRIMARY, false);
+  drawRoundButton(100, btnY, btnW, btnH, "BPM-", THEME_SECONDARY, false);
+  drawRoundButton(190, btnY, btnW, btnH, "BPM+", THEME_SECONDARY, false);
+  drawRoundButton(280, btnY, btnW, btnH, "RNDM", THEME_ACCENT, false);
+  drawRoundButton(370, btnY, btnW, btnH, "<<", THEME_TEXT_DIM, false);
 }
 
 void handleGridsMode() {
@@ -262,8 +247,22 @@ void handleGridsMode() {
     int btn4X = btnSpacing * 4 + btnW * 3;
     int btn5X = btnSpacing * 5 + btnW * 4;
     
+    // Check button press states
+    bool playPressed = touch.isPressed && isButtonPressed(10, btnY, btnW, btnH);
+    bool bpmDownPressed = touch.isPressed && isButtonPressed(100, btnY, btnW, btnH);
+    bool bpmUpPressed = touch.isPressed && isButtonPressed(190, btnY, btnW, btnH);
+    bool randomPressed = touch.isPressed && isButtonPressed(280, btnY, btnW, btnH);
+    bool backPressed = touch.isPressed && isButtonPressed(370, btnY, btnW, btnH);
+    
+    // Draw buttons with press feedback
+    drawRoundButton(10, btnY, btnW, btnH, grids.playing ? "STOP" : "PLAY", THEME_PRIMARY, playPressed);
+    drawRoundButton(100, btnY, btnW, btnH, "BPM-", THEME_SECONDARY, bpmDownPressed);
+    drawRoundButton(190, btnY, btnW, btnH, "BPM+", THEME_SECONDARY, bpmUpPressed);
+    drawRoundButton(280, btnY, btnW, btnH, "RNDM", THEME_ACCENT, randomPressed);
+    drawRoundButton(370, btnY, btnW, btnH, "<<", THEME_TEXT_DIM, backPressed);
+    
     // PLAY/STOP
-    if (isButtonPressed(btn1X, btnY, btnW, btnH)) {
+    if (playPressed) {
       grids.playing = !grids.playing;
       if (grids.playing) {
         grids.step = 0;
@@ -275,7 +274,7 @@ void handleGridsMode() {
     }
     
     // BPM-
-    if (isButtonPressed(btn2X, btnY, btnW, btnH)) {
+    if (bpmDownPressed) {
       grids.bpm = constrain(grids.bpm - 5, GRIDS_MIN_BPM, GRIDS_MAX_BPM);
       drawGridsMode();
       Serial.printf("BPM: %.1f\n", grids.bpm);
@@ -283,7 +282,7 @@ void handleGridsMode() {
     }
     
     // BPM+
-    if (isButtonPressed(btn3X, btnY, btnW, btnH)) {
+    if (bpmUpPressed) {
       grids.bpm = constrain(grids.bpm + 5, GRIDS_MIN_BPM, GRIDS_MAX_BPM);
       drawGridsMode();
       Serial.printf("BPM: %.1f\n", grids.bpm);
@@ -291,7 +290,7 @@ void handleGridsMode() {
     }
     
     // RANDOM
-    if (isButtonPressed(btn4X, btnY, btnW, btnH)) {
+    if (randomPressed) {
       grids.patternX = random(256);
       grids.patternY = random(256);
       regenerateGridsPattern();
@@ -301,7 +300,7 @@ void handleGridsMode() {
     }
     
     // BACK
-    if (isButtonPressed(btn5X, btnY, btnW, btnH)) {
+    if (backPressed) {
       if (grids.playing) {
         grids.playing = false;
       }

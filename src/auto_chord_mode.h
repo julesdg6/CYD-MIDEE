@@ -54,20 +54,16 @@ void initializeAutoChordMode() {
 
 void drawAutoChordMode() {
   tft.fillScreen(THEME_BG);
-  drawHeader("CHORD MODE", scales[chordScale].name + " Diatonic");
+  drawModuleHeader("CHORD MODE");
   
   drawChordKeys();
   
-  // Calculate control button layout from screen dimensions
-  int btnSpacing = 10;
-  int ctrlY = SCREEN_HEIGHT - 80;
-  int btnH = 35;
-  int btnW = (SCREEN_WIDTH - (5 * btnSpacing)) / 4;
-  
-  drawRoundButton(btnSpacing, ctrlY, btnW, btnH, "OCT-", THEME_SECONDARY);
-  drawRoundButton(btnSpacing * 2 + btnW, ctrlY, btnW, btnH, "OCT+", THEME_SECONDARY);
-  drawRoundButton(btnSpacing * 3 + btnW * 2, ctrlY, btnW, btnH, "SCALE", THEME_ACCENT);
-  drawRoundButton(btnSpacing * 4 + btnW * 3, ctrlY, btnW, btnH, "CLEAR", THEME_ERROR);
+  // Controls
+  int ctrlY = SCALED_H(190);
+  drawRoundButton(SCALED_W(10), ctrlY, BTN_SMALL_W, BTN_SMALL_H, "OCT-", THEME_SECONDARY, false);
+  drawRoundButton(SCALED_W(80), ctrlY, BTN_SMALL_W, BTN_SMALL_H, "OCT+", THEME_SECONDARY, false);
+  drawRoundButton(SCALED_W(150), ctrlY, BTN_MEDIUM_W, BTN_SMALL_H, "SCALE", THEME_ACCENT, false);
+  drawRoundButton(SCALED_W(240), ctrlY, BTN_MEDIUM_W, BTN_SMALL_H, "CLEAR", THEME_ERROR, false);
   
   // Status
   tft.setTextColor(THEME_TEXT_DIM, THEME_BG);
@@ -119,34 +115,40 @@ void handleAutoChordMode() {
     return;
   }
   
-  // Calculate button layout from screen dimensions
-  int btnSpacing = 10;
-  int ctrlY = SCREEN_HEIGHT - 80;
-  int btnH = 35;
-  int btnW = (SCREEN_WIDTH - (5 * btnSpacing)) / 4;
+  // Draw control buttons with press feedback
+  int ctrlY = SCALED_H(190);
+  bool octDownPressed = touch.isPressed && isButtonPressed(SCALED_W(10), ctrlY, BTN_SMALL_W, BTN_SMALL_H);
+  bool octUpPressed = touch.isPressed && isButtonPressed(SCALED_W(80), ctrlY, BTN_SMALL_W, BTN_SMALL_H);
+  bool scalePressed = touch.isPressed && isButtonPressed(SCALED_W(150), ctrlY, BTN_MEDIUM_W, BTN_SMALL_H);
+  bool clearPressed = touch.isPressed && isButtonPressed(SCALED_W(240), ctrlY, BTN_MEDIUM_W, BTN_SMALL_H);
+  
+  drawRoundButton(SCALED_W(10), ctrlY, BTN_SMALL_W, BTN_SMALL_H, "OCT-", THEME_SECONDARY, octDownPressed);
+  drawRoundButton(SCALED_W(80), ctrlY, BTN_SMALL_W, BTN_SMALL_H, "OCT+", THEME_SECONDARY, octUpPressed);
+  drawRoundButton(SCALED_W(150), ctrlY, BTN_MEDIUM_W, BTN_SMALL_H, "SCALE", THEME_ACCENT, scalePressed);
+  drawRoundButton(SCALED_W(240), ctrlY, BTN_MEDIUM_W, BTN_SMALL_H, "CLEAR", THEME_ERROR, clearPressed);
   
   if (touch.justPressed) {
     // Octave controls
-    if (isButtonPressed(btnSpacing, ctrlY, btnW, btnH)) {
+    if (octDownPressed) {
       chordOctave = max(2, chordOctave - 1);
       drawAutoChordMode();
       return;
     }
-    if (isButtonPressed(btnSpacing * 2 + btnW, ctrlY, btnW, btnH)) {
+    if (octUpPressed) {
       chordOctave = min(6, chordOctave + 1);
       drawAutoChordMode();
       return;
     }
     
     // Scale selector
-    if (isButtonPressed(btnSpacing * 3 + btnW * 2, ctrlY, btnW, btnH)) {
+    if (scalePressed) {
       chordScale = (chordScale + 1) % NUM_SCALES;
       drawAutoChordMode();
       return;
     }
     
     // Clear all
-    if (isButtonPressed(btnSpacing * 4 + btnW * 3, ctrlY, btnW, btnH)) {
+    if (clearPressed) {
       stopAllChords();
       drawChordKeys();
       return;
