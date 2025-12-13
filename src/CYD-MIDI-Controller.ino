@@ -36,6 +36,7 @@
 #include "morph_mode.h"
 #include "web_server.h"
 #include "ui_elements.h"
+// #include "ui_manager.h"  // Will be used after mode migration to event-driven UI
 #include "midi_utils.h"
 
 // Hardware setup
@@ -697,6 +698,15 @@ void setup() {
   pinMode(27, OUTPUT);
   digitalWrite(27, HIGH);
   
+  // Show splash screen immediately
+  tft.fillScreen(THEME_BG);
+  tft.setTextColor(THEME_PRIMARY, THEME_BG);
+  tft.drawCentreString("CYD MIDI", SCREEN_WIDTH/2, SCREEN_HEIGHT/2 - 40, 4);
+  tft.setTextColor(THEME_TEXT, THEME_BG);
+  tft.drawCentreString("Enhanced Edition", SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + 10, 2);
+  tft.setTextColor(THEME_TEXT_DIM, THEME_BG);
+  tft.drawCentreString("Initializing...", SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + 40, 2);
+  
   // Initialize touch calibration (will auto-calibrate if needed)
   initTouchCalibration();
   
@@ -749,20 +759,9 @@ void setup() {
   Serial.println("BLE Advertising started - Device discoverable as 'CYD MIDI'");
   Serial.printf("BLE MAC Address: %s\n", BLEDevice::getAddress().toString().c_str());
   
-  // Initialize mode systems
-  initializeKeyboardMode();
-  initializeSequencerMode();
-  initializeBouncingBallMode();
-  initializeRandomGeneratorMode();
-  initializeXYPadMode();
-  initializeArpeggiatorMode();
-  initializeGridPianoMode();
-  initializeAutoChordMode();
-  initializeLFOMode();
-  initializeGridsMode();
-  initializeRagaMode();
-  initializeEuclideanMode();
-  initializeMorphMode();
+  // NOTE: UIManager not initialized yet - will be used after mode migration
+  // Modes will initialize when selected from menu (not at startup)
+  // This improves startup time and avoids unnecessary resource usage
   
   drawMenu();
   Serial.println("MIDI Controller ready!");
@@ -1206,36 +1205,41 @@ void handleMenuTouch() {
 
 void enterMode(AppMode mode) {
   currentMode = mode;
+  
+  // NOTE: UIManager::clearMode() not called yet - will be used after mode migration
+  
+  // Each mode's initialize function resets state and calls draw
+  // This ensures clean entry every time and avoids initialization at startup
   switch (mode) {
     case KEYBOARD:
-      drawKeyboardMode();
+      initializeKeyboardMode();
       break;
     case SEQUENCER:
-      drawSequencerMode();
+      initializeSequencerMode();
       break;
     case BOUNCING_BALL:
-      drawBouncingBallMode();
+      initializeBouncingBallMode();
       break;
     case PHYSICS_DROP:
-      drawPhysicsDropMode();
+      initializePhysicsDropMode();
       break;
     case RANDOM_GENERATOR:
-      drawRandomGeneratorMode();
+      initializeRandomGeneratorMode();
       break;
     case XY_PAD:
-      drawXYPadMode();
+      initializeXYPadMode();
       break;
     case ARPEGGIATOR:
-      drawArpeggiatorMode();
+      initializeArpeggiatorMode();
       break;
     case PADS:
-      drawGridPianoMode();
+      initializeGridPianoMode();
       break;
     case AUTO_CHORD:
-      drawAutoChordMode();
+      initializeAutoChordMode();
       break;
     case LFO:
-      drawLFOMode();
+      initializeLFOMode();
       break;
     case TB3PO:
       initializeTB3POMode();
@@ -1258,5 +1262,6 @@ void enterMode(AppMode mode) {
 void exitToMenu() {
   currentMode = MENU;
   stopAllModes();
+  // NOTE: UIManager::clearMode() not called yet - will be used after mode migration
   drawMenu();
 }

@@ -45,6 +45,8 @@ void initializeRandomGeneratorMode() {
   randomGen.currentNote = -1;
   calculateNoteInterval();
   randomGen.nextNoteTime = millis() + randomGen.noteInterval;
+  
+  drawRandomGeneratorMode();
 }
 
 void drawRandomGeneratorMode() {

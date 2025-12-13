@@ -61,6 +61,8 @@ void initializeBouncingBallMode() {
   numActiveBalls = 1;
   initializeBalls();
   initializeWalls();
+  
+  drawBouncingBallMode();
 }
 
 void drawBouncingBallMode() {

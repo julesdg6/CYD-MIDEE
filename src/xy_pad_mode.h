@@ -62,9 +62,11 @@ void initializeXYPadMode() {
   xyBtnYccDown.setText("-");
   xyBtnYccDown.setColor(THEME_SECONDARY);
   
-  xyBtnYccUp.setBounds(controlsX + btnSpacing, PAD_Y + 105, btnWidth, 25);
+  xyBtnYccUp.setBounds(controlsX + btnSpacing, PAD_Y + 85, btnWidth, 25);
   xyBtnYccUp.setText("+");
   xyBtnYccUp.setColor(THEME_SECONDARY);
+  
+  drawXYPadMode();
 }
 
 void drawXYPadMode() {

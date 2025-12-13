@@ -25,6 +25,8 @@ void initializeGridPianoMode() {
   gridOctave = 3;
   gridPressedNote = -1;
   calculateGridLayout();
+  
+  drawGridPianoMode();
 }
 
 void calculateGridLayout() {

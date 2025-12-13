@@ -48,6 +48,12 @@ struct RagaState {
   unsigned long lastNoteTime;
   int8_t currentNote;    // Current playing note
   uint8_t octaveRange;   // 1-3 octaves
+  
+  // Layout constants (calculated during draw)
+  int ragaBtnW, ragaBtnH, ragaBtnStartX, ragaBtnStartY;
+  int ragaBtnSpacing, ragaBtnRowSpacing;
+  int sliderX, sliderY, sliderW, sliderH;
+  int ctrlY, ctrlH, ctrlW;
 };
 
 extern RagaState raga;

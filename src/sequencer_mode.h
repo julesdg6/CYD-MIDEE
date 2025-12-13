@@ -66,6 +66,8 @@ void initializeSequencerMode() {
   seqBtnMenu.setBounds(380, btnY, 90, btnH);
   seqBtnMenu.setText("MENU");
   seqBtnMenu.setColor(THEME_PRIMARY);
+  
+  drawSequencerMode();
 }
 
 void drawSequencerMode() {
@@ -87,10 +89,11 @@ void drawSequencerMode() {
   
   // BPM display
   tft.setTextColor(THEME_TEXT, THEME_BG);
+  int bpmY = SCALED_H(260);  // Match button Y position
   if (midiClock.isReceiving) {
-    tft.drawString(String((int)midiClock.calculatedBPM) + " [EXT]", SCALED_W(310), btnY + SCALED_H(15), 2);
+    tft.drawString(String((int)midiClock.calculatedBPM) + " [EXT]", SCALED_W(310), bpmY + SCALED_H(15), 2);
   } else {
-    tft.drawString(String((int)globalState.bpm), SCALED_W(310), btnY + SCALED_H(15), 2);
+    tft.drawString(String((int)globalState.bpm), SCALED_W(310), bpmY + SCALED_H(15), 2);
   }
 }
 

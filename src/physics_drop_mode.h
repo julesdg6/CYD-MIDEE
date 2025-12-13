@@ -72,6 +72,8 @@ void initializePhysicsDropMode() {
   platforms[1] = {180, 140, 50, 8, -0.3, THEME_SECONDARY, false, 64, "E4", 0};
   platforms[2] = {120, 120, 40, 8, 0.1, THEME_ACCENT, false, 67, "G4", 0};
   numPlatforms = 3;
+  
+  drawPhysicsDropMode();
 }
 
 void drawPhysicsDropMode() {

@@ -42,6 +42,8 @@ void initializeLFOMode() {
   lfo.lastUpdate = 0;
   lfo.lastValue = 64;
   lfo.pitchWheelMode = false;
+  
+  drawLFOMode();
 }
 
 void drawLFOMode() {

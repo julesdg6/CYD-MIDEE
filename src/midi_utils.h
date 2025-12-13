@@ -2,10 +2,16 @@
 #define MIDI_UTILS_H
 
 #include "common_definitions.h"
+#include "ui_elements.h"  // For Button class
 
 // External variables
 extern uint8_t midiChannel;
 extern bool bleEnabled;
+
+// Button objects from modes (for cleanup in stopAllModes)
+extern Button seqBtnPlayStop, seqBtnClear, seqBtnBpmDown, seqBtnBpmUp, seqBtnMenu;
+extern Button keyboardBtnOctDown, keyboardBtnOctUp, keyboardBtnScale, keyboardBtnKeyDown, keyboardBtnKeyUp, keyboardBtnMenu;
+extern Button xyBtnXccDown, xyBtnXccUp, xyBtnYccDown, xyBtnYccUp;
 
 // Scale definitions (implementations in midi_utils.cpp)
 extern const Scale scales[];
@@ -57,6 +63,26 @@ inline void stopAllModes() {
   for (int i = 0; i < 128; i++) {
     MIDIThread::sendNoteOff(i, 0);
   }
+  
+  // Clear Button objects to prevent drawing on other screens
+  // (Button class from ui_elements.h has persistent bounds that must be cleared)
+  seqBtnPlayStop.setBounds(0, 0, 0, 0);
+  seqBtnClear.setBounds(0, 0, 0, 0);
+  seqBtnBpmDown.setBounds(0, 0, 0, 0);
+  seqBtnBpmUp.setBounds(0, 0, 0, 0);
+  seqBtnMenu.setBounds(0, 0, 0, 0);
+  
+  keyboardBtnOctDown.setBounds(0, 0, 0, 0);
+  keyboardBtnOctUp.setBounds(0, 0, 0, 0);
+  keyboardBtnScale.setBounds(0, 0, 0, 0);
+  keyboardBtnKeyDown.setBounds(0, 0, 0, 0);
+  keyboardBtnKeyUp.setBounds(0, 0, 0, 0);
+  keyboardBtnMenu.setBounds(0, 0, 0, 0);
+  
+  xyBtnXccDown.setBounds(0, 0, 0, 0);
+  xyBtnXccUp.setBounds(0, 0, 0, 0);
+  xyBtnYccDown.setBounds(0, 0, 0, 0);
+  xyBtnYccUp.setBounds(0, 0, 0, 0);
 }
 
 // Function declarations (implementations in midi_utils.cpp)

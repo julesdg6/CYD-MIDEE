@@ -48,6 +48,8 @@ void initializeAutoChordMode() {
       activeChordNotes[i][j] = -1;
     }
   }
+  
+  drawAutoChordMode();
 }
 
 void drawAutoChordMode() {

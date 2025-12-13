@@ -62,7 +62,9 @@ void initializeKeyboardMode() {
   
   keyboardBtnMenu.setBounds(380, btnY, 90, btnH);
   keyboardBtnMenu.setText("MENU");
-  keyboardBtnMenu.setColor(THEME_PRIMARY);
+  keyboardBtnMenu.setColor(THEME_ERROR);
+  
+  drawKeyboardMode();
 }
 
 void drawKeyboardMode() {

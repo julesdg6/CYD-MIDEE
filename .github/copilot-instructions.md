@@ -1,5 +1,137 @@
 # GitHub Copilot Instructions for CYD-MIDI-Controller-EE
 
+## Event-Driven UI Architecture (CRITICAL)
+
+**All modes MUST follow event-driven UI patterns. Direct touch handling in modes is FORBIDDEN.**
+
+### Rule 1: No Direct Touch Handling in Modes
+```cpp
+❌ FORBIDDEN:
+void handleMyMode() {
+  if (touch.justPressed && isButtonPressed(x, y, w, h)) {
+    // Handle button press
+  }
+}
+
+✅ REQUIRED:
+// UI components (module scope)
+static UIButton* myButton;
+
+void initializeMyMode() {
+  UIManager::clearMode(); // Always clear first
+  
+  myButton = new UIButton(x, y, w, h, "Label", THEME_PRIMARY);
+  myButton->onPress([]() {
+    handleButtonPress();
+  });
+  UIManager::registerButton(myButton);
+}
+
+void handleMyMode() {
+  // NO TOUCH HANDLING - only animation/timing logic
+  if (myState.playing) {
+    updateAnimation();
+  }
+}
+```
+
+### Rule 2: All Layouts Must Be Calculated
+```cpp
+❌ FORBIDDEN:
+UIButton* btn = new UIButton(10, 100, 80, 45, "Button");
+
+✅ REQUIRED:
+int y = CONTENT_TOP + 20;
+int btnW = (SCREEN_WIDTH - 40) / 3;
+UIButton* btn = new UIButton(10, y, btnW, 45, "Button");
+
+✅ BETTER:
+LayoutGrid grid = LayoutGrid(1, 3, 10, y, SCREEN_WIDTH - 20, 45, 5);
+UIButton* btn = new UIButton(grid.getCell(0, 0), "Button");
+```
+
+### Rule 3: No Overlapping Components
+```cpp
+✅ REQUIRED in initializeMyMode():
+if (UIManager::checkOverlaps()) {
+  Serial.println("ERROR: Overlapping components in MyMode");
+  // Fix layout before committing
+}
+```
+
+### Rule 4: UI Components Are Library Objects
+```cpp
+❌ FORBIDDEN:
+// Custom button drawing in mode file
+void drawMyButton(int x, int y) {
+  tft.fillRoundRect(x, y, 80, 40, 8, THEME_PRIMARY);
+  // ... manual drawing and touch handling
+}
+
+✅ REQUIRED:
+// Use library components from ui_button.h, ui_slider.h, etc.
+UIButton* btn = new UIButton(x, y, 80, 40, "Press", THEME_PRIMARY);
+btn->onPress([]() { handlePress(); });
+UIManager::registerButton(btn);
+```
+
+### Rule 5: Standard Mode File Structure
+```cpp
+// Required structure for all mode files:
+
+// 1. UI component pointers (module scope)
+static UIButton* button1;
+static UIButton* button2;
+static UISlider* slider1;
+
+// 2. Initialize - setup UI components
+void initializeMyMode() {
+  // a. Reset mode state
+  myState.value = defaultValue;
+  
+  // b. Clear previous UI
+  UIManager::clearMode();
+  
+  // c. Create and register UI components with callbacks
+  button1 = new UIButton(...);
+  button1->onPress([]() { onButton1Press(); });
+  UIManager::registerButton(button1);
+  
+  // d. Validate no overlaps
+  if (UIManager::checkOverlaps()) {
+    Serial.println("ERROR: Overlapping components");
+  }
+  
+  // e. Draw static elements
+  drawMyMode();
+}
+
+// 3. Draw - render static/non-interactive elements only
+void drawMyMode() {
+  tft.fillScreen(THEME_BG);
+  drawModuleHeader("MY MODE", true);
+  // Draw text, graphics, non-interactive visuals
+  // UI components draw themselves via UIManager
+}
+
+// 4. Handle - animation and timing logic ONLY (no touch)
+void handleMyMode() {
+  // Update animations, automatic playback, state changes
+  // NO TOUCH HANDLING - UIManager handles this
+}
+
+// 5. Event handlers - callbacks from UI components
+void onButton1Press() {
+  // Handle button 1 press
+}
+
+void onSlider1Change(float value) {
+  // Handle slider change
+}
+```
+
+---
+
 ## Project Overview
 
 CYD MIDI Controller - Enhanced Edition is an advanced touchscreen Bluetooth MIDI controller for the ESP32-2432S028R "Cheap Yellow Display" (CYD). This is a heavily modified fork focused on enhanced UI/UX with larger touch targets, improved layouts, and better touch accuracy for capacitive touchscreens.

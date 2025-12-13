@@ -24,6 +24,8 @@ void initializeArpeggiatorMode() {
   arp.triggeredOctave = 4;
   pianoOctave = 4;
   calculateStepInterval();
+  
+  drawArpeggiatorMode();
 }
 
 void drawArpeggiatorMode() {

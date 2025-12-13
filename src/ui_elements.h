@@ -66,6 +66,9 @@ public:
   
   // Draw the button (automatically detects and shows press state)
   void draw(bool forceRedraw = false) {
+    // Don't draw if button has been cleared (bounds set to 0)
+    if (w == 0 || h == 0) return;
+    
     isPressed = isTouched();
     
     // Only redraw if state changed or forced
