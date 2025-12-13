@@ -454,31 +454,31 @@ void cycleModesForScreenshots() {
   tft.fillRect(0, 120, SCREEN_WIDTH, 40, THEME_SURFACE);
   tft.setTextColor(THEME_PRIMARY, THEME_SURFACE);
   tft.drawCentreString("Capturing: MAIN MENU", SCREEN_WIDTH/2, 130, 4);
-  delay(1000);
+  delay(200);
   drawMenu();
-  delay(1000);
+  delay(200);
   Serial.println("[Screenshot 1/18] Capturing: 00_main_menu");
   saveScreenshot("00_main_menu");
-  delay(500);
+  delay(100);
   
   // Capture settings menu
   Serial.println("[Screenshot 2/18] Starting: SETTINGS");
   tft.fillRect(0, 120, SCREEN_WIDTH, 40, THEME_SURFACE);
   tft.setTextColor(THEME_PRIMARY, THEME_SURFACE);
   tft.drawCentreString("Capturing: SETTINGS", SCREEN_WIDTH/2, 130, 4);
-  delay(1000);
+  delay(200);
   showSettingsMenu(false);
-  delay(1000);
+  delay(200);
   Serial.println("[Screenshot 2/18] Capturing: 01_settings_menu");
   saveScreenshot("01_settings_menu");
-  delay(500);
+  delay(100);
   
   // Capture bluetooth menu
   Serial.println("[Screenshot 3/18] Starting: BLUETOOTH");
   tft.fillRect(0, 120, SCREEN_WIDTH, 40, THEME_SURFACE);
   tft.setTextColor(THEME_PRIMARY, THEME_SURFACE);
   tft.drawCentreString("Capturing: BLUETOOTH", SCREEN_WIDTH/2, 130, 4);
-  delay(1000);
+  delay(200);
   tft.fillScreen(THEME_BG);
   tft.setTextColor(THEME_PRIMARY, THEME_BG);
   tft.drawCentreString("BLUETOOTH STATUS", SCREEN_WIDTH/2, 60, 4);
@@ -490,10 +490,10 @@ void cycleModesForScreenshots() {
   tft.drawCentreString("MAC: " + mac, SCREEN_WIDTH/2, 190, 2);
   int backBtnX2 = (SCREEN_WIDTH - 100) / 2;
   drawRoundButton(backBtnX2, SCREEN_HEIGHT - 80, 100, 35, "BACK", THEME_PRIMARY);
-  delay(1000);
+  delay(200);
   Serial.println("[Screenshot 3/18] Capturing: 02_bluetooth_status");
   saveScreenshot("02_bluetooth_status");
-  delay(500);
+  delay(100);
   
   // Get WiFi IP address for URL display
   String ipAddr = WiFi.localIP().toString();
@@ -517,23 +517,23 @@ void cycleModesForScreenshots() {
     Serial.printf("[Screenshot %d/15] Starting: %s\n", i+1, modeNames[i].c_str());
     Serial.println(url);
     
-    delay(1500);
+    delay(300);
     
     // Enter mode
     Serial.printf("[Screenshot %d/15] Entering mode...\n", i+1);
     enterMode(modes[i]);
     
-    // Wait 2 seconds for mode to fully render, then capture
-    delay(2000);
+    // Wait 500ms for mode to fully render, then capture
+    delay(500);
     Serial.printf("[Screenshot %d/15] Capturing: %s\n", i+1, fileNames[i].c_str());
     saveScreenshot(fileNames[i]);
     
-    // Wait additional time or until touch held to skip
+    // Wait 500ms or until touch held to skip
     unsigned long startTime = millis();
     unsigned long touchStartTime = 0;
     bool skipMode = false;
     bool wasTouching = false;
-    while (millis() - startTime < 3000 && !skipMode) {
+    while (millis() - startTime < 500 && !skipMode) {
       updateTouch();
       if (touch.isPressed) {
         if (!wasTouching) {
@@ -553,7 +553,7 @@ void cycleModesForScreenshots() {
       tft.fillScreen(THEME_WARNING);
       tft.setTextColor(THEME_BG, THEME_WARNING);
       tft.drawCentreString("SKIPPED", SCREEN_WIDTH/2, SCREEN_HEIGHT/2, 4);
-      delay(500);
+      delay(300);
     }
   }
   
@@ -566,7 +566,7 @@ void cycleModesForScreenshots() {
   tft.setTextColor(0x0000, THEME_SUCCESS);
   tft.drawCentreString("Menu + Settings + BLE + 15 Modes", SCREEN_WIDTH/2, 190, 1);
   tft.drawCentreString("Download via web interface", SCREEN_WIDTH/2, 210, 1);
-  delay(3000);
+  delay(1000);
   
   // Return to menu
   exitToMenu();
