@@ -260,15 +260,21 @@ void drawTB3POMode() {
   
   y += stepHeight + 20;
   
-  // Control buttons - moved up from screen edge for better touch response
-  int btnW = 90;
+  // Control buttons - calculate from screen dimensions
+  int btnSpacing = 10;
+  int btnY = SCREEN_HEIGHT - 70;
   int btnH = 50;
-  int btnY = 230;  // Moved up from 260 to avoid edge touch issues
+  int btnW = (SCREEN_WIDTH - (5 * btnSpacing)) / 4;
   
-  drawRoundButton(10, btnY, btnW, btnH, tb3po.playing ? "STOP" : "PLAY", THEME_PRIMARY, THEME_TEXT);
-  drawRoundButton(110, btnY, btnW, btnH, "REGEN", THEME_SECONDARY, THEME_TEXT);
-  drawRoundButton(210, btnY, btnW, btnH, "SEED", THEME_ACCENT, THEME_TEXT);
-  drawRoundButton(310, btnY, btnW, btnH, "SCALE", THEME_SUCCESS, THEME_TEXT);
+  int btn1X = btnSpacing;
+  int btn2X = btnSpacing * 2 + btnW;
+  int btn3X = btnSpacing * 3 + btnW * 2;
+  int btn4X = btnSpacing * 4 + btnW * 3;
+  
+  drawRoundButton(btn1X, btnY, btnW, btnH, tb3po.playing ? "STOP" : "PLAY", THEME_PRIMARY, THEME_TEXT);
+  drawRoundButton(btn2X, btnY, btnW, btnH, "REGEN", THEME_SECONDARY, THEME_TEXT);
+  drawRoundButton(btn3X, btnY, btnW, btnH, "SEED", THEME_ACCENT, THEME_TEXT);
+  drawRoundButton(btn4X, btnY, btnW, btnH, "SCALE", THEME_SUCCESS, THEME_TEXT);
 }
 
 // Efficient update of just the step visualization
@@ -320,8 +326,16 @@ void handleTB3POMode() {
     // Still handle playback timing even during wait
   }
   
+  // Calculate button layout matching drawTB3POMode
+  int btnSpacing = 10;
+  int btnY = SCREEN_HEIGHT - 70;
   int btnH = 50;
-  int btnY = 230;  // Moved up to avoid edge touch issues
+  int btnW = (SCREEN_WIDTH - (5 * btnSpacing)) / 4;
+  
+  int btn1X = btnSpacing;
+  int btn2X = btnSpacing * 2 + btnW;
+  int btn3X = btnSpacing * 3 + btnW * 2;
+  int btn4X = btnSpacing * 4 + btnW * 3;
   
   // Handle playback timing
   if (tb3po.playing && tb3po.useInternalClock) {
@@ -377,7 +391,7 @@ void handleTB3POMode() {
     Serial.printf("TB3PO JUST PRESSED at: (%d,%d)\n", touch.x, touch.y);
     
     // Play/Stop button
-    if (isButtonPressed(10, btnY, 90, btnH)) {
+    if (isButtonPressed(btn1X, btnY, btnW, btnH)) {
       Serial.printf("PLAY/STOP pressed. Was playing: %d\n", tb3po.playing);
       tb3po.playing = !tb3po.playing;
       if (!tb3po.playing && tb3po.currentNote >= 0) {
@@ -393,13 +407,13 @@ void handleTB3POMode() {
       drawTB3POMode();
     }
     // Regenerate button
-    else if (isButtonPressed(110, btnY, 90, btnH)) {
+    else if (isButtonPressed(btn2X, btnY, btnW, btnH)) {
       Serial.println("REGEN pressed");
       regenerateAll();
       drawTB3POMode();
     }
     // Seed lock button
-    else if (isButtonPressed(210, btnY, 90, btnH)) {
+    else if (isButtonPressed(btn3X, btnY, btnW, btnH)) {
       Serial.printf("SEED pressed. Locked: %d -> %d\n", tb3po.lockSeed, !tb3po.lockSeed);
       tb3po.lockSeed = !tb3po.lockSeed;
       if (!tb3po.lockSeed) {
@@ -409,7 +423,7 @@ void handleTB3POMode() {
       drawTB3POMode();
     }
     // Scale button
-    else if (isButtonPressed(310, btnY, 90, btnH)) {
+    else if (isButtonPressed(btn4X, btnY, btnW, btnH)) {
       Serial.printf("SCALE pressed. Index: %d -> %d\n", tb3po.scaleIndex, (tb3po.scaleIndex + 1) % NUM_SCALES);
       tb3po.scaleIndex++;
       if (tb3po.scaleIndex >= NUM_SCALES) {

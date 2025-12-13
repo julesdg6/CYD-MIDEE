@@ -174,16 +174,23 @@ void drawGridsMode() {
   int hatFill = (grids.hatDensity * sliderW) / 255;
   if (hatFill > 0) tft.fillRect(366, sliderY + 1, hatFill, sliderH - 2, THEME_ACCENT);
   
-  // Control buttons at bottom
-  int btnY = 260;
+  // Control buttons at bottom - calculated from screen dimensions
+  int btnSpacing = 10;
+  int btnY = SCREEN_HEIGHT - 60;
   int btnH = 50;
-  int btnW = 80;
+  int btnW = (SCREEN_WIDTH - (6 * btnSpacing)) / 5;
   
-  drawRoundButton(10, btnY, btnW, btnH, grids.playing ? "STOP" : "PLAY", THEME_PRIMARY, THEME_TEXT);
-  drawRoundButton(100, btnY, btnW, btnH, "BPM-", THEME_SECONDARY, THEME_TEXT);
-  drawRoundButton(190, btnY, btnW, btnH, "BPM+", THEME_SECONDARY, THEME_TEXT);
-  drawRoundButton(280, btnY, btnW, btnH, "RNDM", THEME_ACCENT, THEME_TEXT);
-  drawRoundButton(370, btnY, btnW, btnH, "<<", THEME_TEXT_DIM, THEME_TEXT);
+  int btn1X = btnSpacing;
+  int btn2X = btnSpacing * 2 + btnW;
+  int btn3X = btnSpacing * 3 + btnW * 2;
+  int btn4X = btnSpacing * 4 + btnW * 3;
+  int btn5X = btnSpacing * 5 + btnW * 4;
+  
+  drawRoundButton(btn1X, btnY, btnW, btnH, grids.playing ? "STOP" : "PLAY", THEME_PRIMARY, THEME_TEXT);
+  drawRoundButton(btn2X, btnY, btnW, btnH, "BPM-", THEME_SECONDARY, THEME_TEXT);
+  drawRoundButton(btn3X, btnY, btnW, btnH, "BPM+", THEME_SECONDARY, THEME_TEXT);
+  drawRoundButton(btn4X, btnY, btnW, btnH, "RNDM", THEME_ACCENT, THEME_TEXT);
+  drawRoundButton(btn5X, btnY, btnW, btnH, "<<", THEME_TEXT_DIM, THEME_TEXT);
 }
 
 void handleGridsMode() {
@@ -243,13 +250,20 @@ void handleGridsMode() {
       return;
     }
     
-    // Check control buttons
-    int btnY = 260;
+    // Check control buttons - calculate matching drawGridsMode
+    int btnSpacing = 10;
+    int btnY = SCREEN_HEIGHT - 60;
     int btnH = 50;
-    int btnW = 80;
+    int btnW = (SCREEN_WIDTH - (6 * btnSpacing)) / 5;
+    
+    int btn1X = btnSpacing;
+    int btn2X = btnSpacing * 2 + btnW;
+    int btn3X = btnSpacing * 3 + btnW * 2;
+    int btn4X = btnSpacing * 4 + btnW * 3;
+    int btn5X = btnSpacing * 5 + btnW * 4;
     
     // PLAY/STOP
-    if (isButtonPressed(10, btnY, btnW, btnH)) {
+    if (isButtonPressed(btn1X, btnY, btnW, btnH)) {
       grids.playing = !grids.playing;
       if (grids.playing) {
         grids.step = 0;
@@ -261,7 +275,7 @@ void handleGridsMode() {
     }
     
     // BPM-
-    if (isButtonPressed(100, btnY, btnW, btnH)) {
+    if (isButtonPressed(btn2X, btnY, btnW, btnH)) {
       grids.bpm = constrain(grids.bpm - 5, GRIDS_MIN_BPM, GRIDS_MAX_BPM);
       drawGridsMode();
       Serial.printf("BPM: %.1f\n", grids.bpm);
@@ -269,7 +283,7 @@ void handleGridsMode() {
     }
     
     // BPM+
-    if (isButtonPressed(190, btnY, btnW, btnH)) {
+    if (isButtonPressed(btn3X, btnY, btnW, btnH)) {
       grids.bpm = constrain(grids.bpm + 5, GRIDS_MIN_BPM, GRIDS_MAX_BPM);
       drawGridsMode();
       Serial.printf("BPM: %.1f\n", grids.bpm);
@@ -277,7 +291,7 @@ void handleGridsMode() {
     }
     
     // RANDOM
-    if (isButtonPressed(280, btnY, btnW, btnH)) {
+    if (isButtonPressed(btn4X, btnY, btnW, btnH)) {
       grids.patternX = random(256);
       grids.patternY = random(256);
       regenerateGridsPattern();
@@ -287,7 +301,7 @@ void handleGridsMode() {
     }
     
     // BACK
-    if (isButtonPressed(370, btnY, btnW, btnH)) {
+    if (isButtonPressed(btn5X, btnY, btnW, btnH)) {
       if (grids.playing) {
         grids.playing = false;
       }
