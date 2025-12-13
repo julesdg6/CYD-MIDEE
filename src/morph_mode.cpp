@@ -295,11 +295,11 @@ void drawMorphMode() {
   tft.setCursor(10, 5);
   tft.print("MORPH");
   
-  // Central gesture area (280x240)
+  // Central gesture area - calculated from screen dimensions
   int gestureX = 20;
-  int gestureY = 35;
-  int gestureW = 280;
-  int gestureH = 240;
+  int gestureY = CONTENT_TOP;
+  int gestureW = (SCREEN_WIDTH * 2) / 3 - 30;
+  int gestureH = SCREEN_HEIGHT - CONTENT_TOP - 10;
   
   tft.drawRect(gestureX, gestureY, gestureW, gestureH, THEME_ACCENT);
   
@@ -348,9 +348,9 @@ void drawMorphMode() {
     tft.drawCircle(px, py, 8, TFT_YELLOW);
   }
   
-  // Control panel (right side)
-  int ctrlX = 310;
-  int ctrlY = 35;
+  // Control panel (right side) - calculated from screen dimensions
+  int ctrlX = gestureX + gestureW + 10;
+  int ctrlY = CONTENT_TOP;
   
   // Morph XY control
   tft.setTextSize(1);

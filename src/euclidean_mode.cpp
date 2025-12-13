@@ -71,13 +71,13 @@ void drawEuclideanMode() {
   tft.setCursor(10, 5);
   tft.print("EUCLIDEAN");
   
-  // Draw circular visualization (inspired by Ableton interface)
-  int centerX = 200;
-  int centerY = 140;
-  int radius = 90;
+  // Draw circular visualization - calculated from screen dimensions
+  int centerX = SCREEN_WIDTH / 3;
+  int centerY = (SCREEN_HEIGHT - CONTENT_TOP) / 2 + CONTENT_TOP;
+  int radius = min(SCREEN_WIDTH / 4, (SCREEN_HEIGHT - CONTENT_TOP) / 3);
   
   // Draw concentric circles for each voice
-  int radiusStep = 18;
+  int radiusStep = radius / 5;
   for (int v = 3; v >= 0; v--) {
     int r = radius - (v * radiusStep);
     tft.drawCircle(centerX, centerY, r, euclideanState.voices[v].color);
@@ -103,10 +103,11 @@ void drawEuclideanMode() {
     }
   }
   
-  // Control panel (right side) - inspired by Ableton's layout
-  int controlX = 390;
-  int controlY = 40;
-  int rowHeight = 62;
+  // Control panel (right side) - calculated from screen dimensions
+  int controlX = SCREEN_WIDTH - 90;
+  int controlY = CONTENT_TOP;
+  int availableHeight = SCREEN_HEIGHT - CONTENT_TOP - 20;
+  int rowHeight = availableHeight / 4;
   
   for (int v = 0; v < 4; v++) {
     int y = controlY + (v * rowHeight);
