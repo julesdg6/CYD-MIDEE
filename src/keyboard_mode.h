@@ -37,30 +37,37 @@ void initializeKeyboardMode() {
   lastKey = -1;
   lastRow = -1;
   
-  // Initialize control buttons with responsive positioning
-  int btnY = 240;
+  // Calculate button layout from screen dimensions
+  int btnY = SCREEN_HEIGHT - 60;
   int btnH = 45;
-  keyboardBtnOctDown.setBounds(10, btnY, 60, btnH);
+  int btnSpacing = 10;
+  int totalBtnWidth = SCREEN_WIDTH - (2 * btnSpacing);
+  int btn1W = (totalBtnWidth - (5 * btnSpacing)) / 6;
+  int btn2W = btn1W;
+  int btn3W = btn1W + 20;
+  
+  // Initialize control buttons with calculated positioning
+  keyboardBtnOctDown.setBounds(btnSpacing, btnY, btn1W, btnH);
   keyboardBtnOctDown.setText("OCT-");
   keyboardBtnOctDown.setColor(THEME_SECONDARY);
   
-  keyboardBtnOctUp.setBounds(80, btnY, 60, btnH);
+  keyboardBtnOctUp.setBounds(btnSpacing * 2 + btn1W, btnY, btn1W, btnH);
   keyboardBtnOctUp.setText("OCT+");
   keyboardBtnOctUp.setColor(THEME_SECONDARY);
   
-  keyboardBtnScale.setBounds(150, btnY, 80, btnH);
+  keyboardBtnScale.setBounds(btnSpacing * 3 + btn1W * 2, btnY, btn3W, btnH);
   keyboardBtnScale.setText("SCALE");
   keyboardBtnScale.setColor(THEME_ACCENT);
   
-  keyboardBtnKeyDown.setBounds(240, btnY, 60, btnH);
+  keyboardBtnKeyDown.setBounds(btnSpacing * 4 + btn1W * 2 + btn3W, btnY, btn1W, btnH);
   keyboardBtnKeyDown.setText("KEY-");
   keyboardBtnKeyDown.setColor(THEME_WARNING);
   
-  keyboardBtnKeyUp.setBounds(310, btnY, 60, btnH);
+  keyboardBtnKeyUp.setBounds(btnSpacing * 5 + btn1W * 3 + btn3W, btnY, btn1W, btnH);
   keyboardBtnKeyUp.setText("KEY+");
   keyboardBtnKeyUp.setColor(THEME_WARNING);
   
-  keyboardBtnMenu.setBounds(380, btnY, 90, btnH);
+  keyboardBtnMenu.setBounds(btnSpacing * 6 + btn1W * 4 + btn3W, btnY, btn1W + 20, btnH);
   keyboardBtnMenu.setText("MENU");
   keyboardBtnMenu.setColor(THEME_ERROR);
   
@@ -74,7 +81,7 @@ void drawKeyboardMode() {
   // Show scale and key info under header
   tft.setTextColor(THEME_TEXT_DIM, THEME_BG);
   String info = scales[keyboardScale].name + " - Key " + getNoteNameFromMIDI(keyboardKey);
-  tft.drawCentreString(info, SCREEN_WIDTH/2, 52, 2);
+  tft.drawCentreString(info, SCREEN_WIDTH/2, CONTENT_TOP + 2, 2);
   
   // Draw keys - two rows
   for (int row = 0; row < NUM_ROWS; row++) {
@@ -83,26 +90,33 @@ void drawKeyboardMode() {
     }
   }
   
-  // Control layout - larger buttons at bottom
-  int btnY = SCALED_H(240);  // Lower position
-  int btnH = BTN_MEDIUM_H;   // Taller buttons (was 25)
-  drawRoundButton(SCALED_W(10), btnY, BTN_SMALL_W, btnH, "OCT-", THEME_SECONDARY);
-  drawRoundButton(SCALED_W(80), btnY, BTN_SMALL_W, btnH, "OCT+", THEME_SECONDARY);
-  drawRoundButton(SCALED_W(150), btnY, BTN_MEDIUM_W, btnH, "SCALE", THEME_ACCENT);
-  drawRoundButton(SCALED_W(240), btnY, BTN_SMALL_W, btnH, "KEY-", THEME_WARNING);
-  drawRoundButton(SCALED_W(310), btnY, BTN_SMALL_W, btnH, "KEY+", THEME_WARNING);
-  drawRoundButton(SCALED_W(380), btnY, SCALED_W(90), btnH, "MENU", THEME_PRIMARY);
+  // Calculate button layout from screen dimensions
+  int btnY = SCREEN_HEIGHT - 60;
+  int btnH = 45;
+  int btnSpacing = 10;
+  int totalBtnWidth = SCREEN_WIDTH - (2 * btnSpacing);
+  int btn1W = (totalBtnWidth - (5 * btnSpacing)) / 6;
+  int btn3W = btn1W + 20;
+  
+  drawRoundButton(btnSpacing, btnY, btn1W, btnH, "OCT-", THEME_SECONDARY);
+  drawRoundButton(btnSpacing * 2 + btn1W, btnY, btn1W, btnH, "OCT+", THEME_SECONDARY);
+  drawRoundButton(btnSpacing * 3 + btn1W * 2, btnY, btn3W, btnH, "SCALE", THEME_ACCENT);
+  drawRoundButton(btnSpacing * 4 + btn1W * 2 + btn3W, btnY, btn1W, btnH, "KEY-", THEME_WARNING);
+  drawRoundButton(btnSpacing * 5 + btn1W * 3 + btn3W, btnY, btn1W, btnH, "KEY+", THEME_WARNING);
+  drawRoundButton(btnSpacing * 6 + btn1W * 4 + btn3W, btnY, btn1W + 20, btnH, "MENU", THEME_PRIMARY);
   
   // Status display
   tft.setTextColor(THEME_TEXT_DIM, THEME_BG);
-  tft.drawString("Oct " + String(keyboardOctave) + " | " + 
-               scales[keyboardScale].name + " | Key: " + getNoteNameFromMIDI(keyboardKey), 10, 295, 2);
+  String status = "Oct " + String(keyboardOctave) + " | " + 
+               scales[keyboardScale].name + " | Key: " + getNoteNameFromMIDI(keyboardKey);
+  tft.drawString(status, 10, SCREEN_HEIGHT - 15, 2);
 }
 
 void drawKeyboardKey(int row, int keyIndex, bool pressed) {
   int keyWidth = SCREEN_WIDTH / NUM_KEYS;
-  int keyHeight = 80;  // Increased from 65 for easier tapping
-  int keyY = CONTENT_TOP + 10 + (row * (keyHeight + 5));
+  int keySpacing = 5;
+  int keyHeight = (SCREEN_HEIGHT - CONTENT_TOP - 80 - 20) / NUM_ROWS; // Fill available space
+  int keyY = CONTENT_TOP + 20 + (row * (keyHeight + keySpacing));
   int x = keyIndex * keyWidth;
   
   uint16_t bgColor = pressed ? THEME_PRIMARY : THEME_SURFACE;
@@ -127,6 +141,14 @@ void handleKeyboardMode() {
     return;
   }
   
+  // Calculate button layout from screen dimensions
+  int btnY = SCREEN_HEIGHT - 60;
+  int btnH = 45;
+  int btnSpacing = 10;
+  int totalBtnWidth = SCREEN_WIDTH - (2 * btnSpacing);
+  int btn1W = (totalBtnWidth - (5 * btnSpacing)) / 6;
+  int btn3W = btn1W + 20;
+  
   // Update button visual states
   keyboardBtnOctDown.draw();
   keyboardBtnOctUp.draw();
@@ -136,27 +158,27 @@ void handleKeyboardMode() {
   keyboardBtnMenu.draw();
   
   if (touch.justPressed) {
-    if (isButtonPressed(SCALED_W(10), SCALED_H(240), BTN_SMALL_W, BTN_MEDIUM_H)) {
+    if (isButtonPressed(btnSpacing, btnY, btn1W, btnH)) {
       keyboardOctave = max(1, keyboardOctave - 1);
       drawKeyboardMode();
       return;
     }
-    if (isButtonPressed(SCALED_W(80), SCALED_H(240), BTN_SMALL_W, BTN_MEDIUM_H)) {
+    if (isButtonPressed(btnSpacing * 2 + btn1W, btnY, btn1W, btnH)) {
       keyboardOctave = min(8, keyboardOctave + 1);
       drawKeyboardMode();
       return;
     }
-    if (isButtonPressed(SCALED_W(150), SCALED_H(240), BTN_MEDIUM_W, BTN_MEDIUM_H)) {
+    if (isButtonPressed(btnSpacing * 3 + btn1W * 2, btnY, btn3W, btnH)) {
       keyboardScale = (keyboardScale + 1) % NUM_SCALES;
       drawKeyboardMode();
       return;
     }
-    if (isButtonPressed(SCALED_W(240), SCALED_H(240), BTN_SMALL_W, BTN_MEDIUM_H)) {
+    if (isButtonPressed(btnSpacing * 4 + btn1W * 2 + btn3W, btnY, btn1W, btnH)) {
       keyboardKey = (keyboardKey - 1 + 12) % 12;
       drawKeyboardMode();
       return;
     }
-    if (isButtonPressed(SCALED_W(310), SCALED_H(240), BTN_SMALL_W, BTN_MEDIUM_H)) {
+    if (isButtonPressed(btnSpacing * 5 + btn1W * 3 + btn3W, btnY, btn1W, btnH)) {
       keyboardKey = (keyboardKey + 1) % 12;
       drawKeyboardMode();
       return;
@@ -167,13 +189,14 @@ void handleKeyboardMode() {
   int key = -1;
   int row = -1;
   
-  // Check which key and row is being touched
+  // Check which key and row is being touched - use calculated dimensions
   if (touch.isPressed) {
     int keyWidth = SCREEN_WIDTH / NUM_KEYS;
-    int keyHeight = 80;
+    int keySpacing = 5;
+    int keyHeight = (SCREEN_HEIGHT - CONTENT_TOP - 80 - 20) / NUM_ROWS;
     
     for (int r = 0; r < NUM_ROWS; r++) {
-      int keyY = 60 + (r * (keyHeight + 5));
+      int keyY = CONTENT_TOP + 20 + (r * (keyHeight + keySpacing));
       if (touch.y >= keyY && touch.y < keyY + keyHeight) {
         row = r;
         key = touch.x / keyWidth;
