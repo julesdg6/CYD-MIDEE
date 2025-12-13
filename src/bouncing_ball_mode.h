@@ -14,10 +14,10 @@ struct Ball {
   bool active;
 };
 
-// Play area constants for 480x320 screen
-#define PLAY_AREA_MARGIN_X 80
-#define PLAY_AREA_MARGIN_Y_TOP 70
-#define PLAY_AREA_MARGIN_Y_BOTTOM 100
+// Play area constants - calculated based on screen size
+#define PLAY_AREA_MARGIN_X (SCREEN_WIDTH / 6)
+#define PLAY_AREA_MARGIN_Y_TOP (CONTENT_TOP + 20)
+#define PLAY_AREA_MARGIN_Y_BOTTOM (SCREEN_HEIGHT > 250 ? 100 : 80)
 #define WALL_THICKNESS 4
 
 #define MAX_BALLS 4
@@ -69,8 +69,10 @@ void drawBouncingBallMode() {
   tft.fillScreen(THEME_BG);
   drawModuleHeader("ZEN");
   
-  // Controls - positioned at bottom with proper spacing
+  // Calculate control button layout from screen dimensions
+  int btnSpacing = 10;
   int btnY = SCREEN_HEIGHT - 50;
+  int btnH = 30;
   int statusY = SCREEN_HEIGHT - 75;
   drawRoundButton(10, btnY, 50, 30, "ADD", THEME_SUCCESS, false);
   drawRoundButton(70, btnY, 60, 30, "RESET", THEME_WARNING, false);
@@ -82,9 +84,9 @@ void drawBouncingBallMode() {
   // Status display
   tft.setTextColor(THEME_TEXT_DIM, THEME_BG);
   String keyName = getNoteNameFromMIDI(ballKey);
-  tft.drawString(keyName + " " + scales[ballScale].name, 10, statusY, 2);
-  tft.drawString("Oct:" + String(ballOctave), 240, statusY, 2);
-  tft.drawString("Balls:" + String(numActiveBalls), 340, statusY, 2);
+  tft.drawString(keyName + " " + scales[ballScale].name, btnSpacing, statusY, 2);
+  tft.drawString("Oct:" + String(ballOctave), SCREEN_WIDTH / 2, statusY, 2);
+  tft.drawString("Balls:" + String(numActiveBalls), SCREEN_WIDTH - 80, statusY, 2);
   
   drawWalls();
   drawBalls();
@@ -187,7 +189,12 @@ void handleBouncingBallMode() {
     return;
   }
   
+  // Calculate button layout from screen dimensions
+  int btnSpacing = 10;
   int btnY = SCREEN_HEIGHT - 50;
+  int btnH = 30;
+  int availableWidth = SCREEN_WIDTH - (2 * btnSpacing);
+  int btn1W = (availableWidth - (5 * btnSpacing)) / 6;
   
   // Draw control buttons with press feedback
   bool addPressed = touch.isPressed && isButtonPressed(10, btnY, 50, 30);

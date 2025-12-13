@@ -122,7 +122,7 @@ void drawRandomGenControls() {
   
   y += btnHeight + spacing + 5;
   
-  // Current note indicator (compact)
+  // Current note indicator
   if (randomGen.currentNote != -1) {
     tft.setTextColor(THEME_PRIMARY, THEME_BG);
     tft.drawString("Now: ", 10, y + 5, 1);

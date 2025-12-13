@@ -260,10 +260,11 @@ void drawTB3POMode() {
   
   y += stepHeight + 20;
   
-  // Control buttons - moved up from screen edge for better touch response
-  int btnW = 90;
+  // Control buttons - calculate from screen dimensions
+  int btnSpacing = 10;
+  int btnY = SCREEN_HEIGHT - 70;
   int btnH = 50;
-  int btnY = 230;  // Moved up from 260 to avoid edge touch issues
+  int btnW = (SCREEN_WIDTH - (5 * btnSpacing)) / 4;
   
   drawRoundButton(10, btnY, btnW, btnH, tb3po.playing ? "STOP" : "PLAY", THEME_PRIMARY, false);
   drawRoundButton(110, btnY, btnW, btnH, "REGEN", THEME_SECONDARY, false);
@@ -320,8 +321,16 @@ void handleTB3POMode() {
     // Still handle playback timing even during wait
   }
   
+  // Calculate button layout matching drawTB3POMode
+  int btnSpacing = 10;
+  int btnY = SCREEN_HEIGHT - 70;
   int btnH = 50;
-  int btnY = 230;  // Moved up to avoid edge touch issues
+  int btnW = (SCREEN_WIDTH - (5 * btnSpacing)) / 4;
+  
+  int btn1X = btnSpacing;
+  int btn2X = btnSpacing * 2 + btnW;
+  int btn3X = btnSpacing * 3 + btnW * 2;
+  int btn4X = btnSpacing * 4 + btnW * 3;
   
   // Draw control buttons with press feedback
   bool playPressed = touch.isPressed && isButtonPressed(10, btnY, 90, btnH);

@@ -80,6 +80,14 @@ void drawPhysicsDropMode() {
   tft.fillScreen(THEME_BG);
   drawModuleHeader("DROP");
   
+  // Calculate control button layout from screen dimensions
+  int btnSpacing = 10;
+  int statusY = SCREEN_HEIGHT - 110;
+  int btnY = SCREEN_HEIGHT - 80;
+  int btnH = 30;
+  int availableWidth = SCREEN_WIDTH - (2 * btnSpacing);
+  int btn1W = (availableWidth - (5 * btnSpacing)) / 6;
+  
   // Controls
   drawRoundButton(10, 200, 40, 25, platformMode ? "DROP" : "EDIT", THEME_WARNING, false);
   drawRoundButton(60, 200, 40, 25, "CLEAR", THEME_ERROR, false);
@@ -91,9 +99,9 @@ void drawPhysicsDropMode() {
   // Status display
   tft.setTextColor(THEME_TEXT_DIM, THEME_BG);
   String keyName = getNoteNameFromMIDI(dropKey);
-  tft.drawString(keyName + " " + scales[dropScale].name, 10, 180, 1);
-  tft.drawString("Oct:" + String(dropOctave), 150, 180, 1);
-  tft.drawString("Balls:" + String(numActiveDropBalls), 220, 180, 1);
+  tft.drawString(keyName + " " + scales[dropScale].name, btnSpacing, statusY, 1);
+  tft.drawString("Oct:" + String(dropOctave), SCREEN_WIDTH / 2 - 30, statusY, 1);
+  tft.drawString("Balls:" + String(numActiveDropBalls), SCREEN_WIDTH - 80, statusY, 1);
   
   drawPlatforms();
   drawDropBalls();
@@ -210,8 +218,10 @@ void handlePhysicsDropMode() {
       return;
     }
     
-    // Touch in play area
-    if (touch.y >= 60 && touch.y <= 175) {
+    // Touch in play area - calculated dynamically
+    int playTop = CONTENT_TOP + 10;
+    int playBottom = SCREEN_HEIGHT - 120;
+    if (touch.y >= playTop && touch.y <= playBottom) {
       if (platformMode) {
         // Add platform
         addPlatform(touch.x, touch.y);

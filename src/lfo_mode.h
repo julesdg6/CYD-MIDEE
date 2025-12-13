@@ -110,6 +110,7 @@ void drawLFOControls() {
   tft.drawString(String(lfo.lastValue), 60, y + 5, 2);
   
   // Status indicator
+  int indicatorX = SCREEN_WIDTH - 30;
   if (lfo.isRunning) {
     tft.fillCircle(250, y + 15, 8, THEME_SUCCESS);
     tft.drawCircle(250, y + 15, 8, THEME_TEXT);
@@ -119,11 +120,11 @@ void drawLFOControls() {
 }
 
 void drawWaveform() {
-  // Draw a mini waveform visualization
+  // Draw a mini waveform visualization - use available width
   int waveX = 10;
-  int waveY = 180;
-  int waveW = 200;
-  int waveH = 30;
+  int waveY = SCREEN_HEIGHT - 80;
+  int waveW = SCREEN_WIDTH - 20;
+  int waveH = 50;
   
   tft.drawRect(waveX, waveY, waveW, waveH, THEME_TEXT_DIM);
   

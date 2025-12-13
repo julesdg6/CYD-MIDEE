@@ -67,14 +67,15 @@ void drawAutoChordMode() {
   
   // Status
   tft.setTextColor(THEME_TEXT_DIM, THEME_BG);
-  tft.drawString("Oct " + String(chordOctave), SCALED_W(10), SCALED_H(235), 2);
-  tft.drawString("Classic piano chords", SCALED_W(110), SCALED_H(210), 1);
+  tft.drawString("Oct " + String(chordOctave), btnSpacing, SCREEN_HEIGHT - 15, 2);
+  tft.drawString("Classic piano chords", SCREEN_WIDTH / 2 - 60, ctrlY - 25, 1);
 }
 
 void drawChordKeys() {
   int keyWidth = SCREEN_WIDTH / 8;
-  int keyHeight = SCALED_H(100);
-  int keyY = CONTENT_TOP + SCALED_H(20);
+  int keyY = CONTENT_TOP + 10;
+  int availableHeight = SCREEN_HEIGHT - keyY - 120; // Leave space for controls
+  int keyHeight = availableHeight;
   
   uint16_t degreeColors[] = {
     THEME_PRIMARY, THEME_SECONDARY, THEME_ACCENT, THEME_SUCCESS,
@@ -93,7 +94,7 @@ void drawChordKeys() {
     
     // Roman numeral
     tft.setTextColor(textColor, bgColor);
-    tft.drawCentreString(diatonicChords[i].name, x + keyWidth/2, keyY + 20, 4);
+    tft.drawCentreString(diatonicChords[i].name, x + keyWidth/2, keyY + keyHeight/3, 4);
     
     // Root note name
     int rootNote;
@@ -103,7 +104,7 @@ void drawChordKeys() {
       rootNote = getNoteInScale(chordScale, i, chordOctave);
     }
     String rootName = getNoteNameFromMIDI(rootNote);
-    tft.drawCentreString(rootName, x + keyWidth/2, keyY + 50, 2);
+    tft.drawCentreString(rootName, x + keyWidth/2, keyY + (keyHeight * 2)/3, 2);
   }
 }
 
@@ -153,10 +154,11 @@ void handleAutoChordMode() {
       return;
     }
     
-    // Chord keys - only handle on initial press
+    // Chord keys - calculate dimensions to match drawChordKeys()
     int keyWidth = SCREEN_WIDTH / 8;
-    int keyHeight = 100;
-    int keyY = CONTENT_TOP + 20;  // Match drawChordKeys()
+    int keyY = CONTENT_TOP + 10;
+    int availableHeight = SCREEN_HEIGHT - keyY - 120;
+    int keyHeight = availableHeight;
     
     for (int i = 0; i < 8; i++) {
       int x = i * keyWidth;

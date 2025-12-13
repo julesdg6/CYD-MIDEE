@@ -48,12 +48,14 @@ void drawGridPianoMode() {
   tft.fillScreen(THEME_BG);
   drawModuleHeader("PADS");
   
-  // Grid area
-  int cellW = 45;
-  int cellH = 32;
+  // Calculate grid area from screen dimensions
   int startX = 10;
-  int startY = 55;
+  int startY = CONTENT_TOP + 5;
   int spacing = 2;
+  int availableWidth = SCREEN_WIDTH - (2 * startX);
+  int availableHeight = SCREEN_HEIGHT - startY - 60; // Leave space for controls
+  int cellW = (availableWidth - (GRID_COLS - 1) * spacing) / GRID_COLS;
+  int cellH = (availableHeight - (GRID_ROWS - 1) * spacing) / GRID_ROWS;
   
   for (int row = 0; row < GRID_ROWS; row++) {
     for (int col = 0; col < GRID_COLS; col++) {
@@ -68,21 +70,24 @@ void drawGridPianoMode() {
   
   // Octave display
   tft.setTextColor(THEME_TEXT_DIM, THEME_BG);
-  tft.drawString("Oct " + String(gridOctave), SCALED_W(150), SCALED_H(243), 2);
+  tft.drawString("Oct " + String(gridOctave), btnSpacing * 3 + 120, ctrlY + 10, 2);
   
   // Current note display
   if (gridPressedNote != -1) {
     tft.setTextColor(THEME_PRIMARY, THEME_BG);
-    tft.drawString("Playing: " + getNoteNameFromMIDI(gridPressedNote), SCALED_W(180), SCALED_H(207), 1);
+    tft.drawString("Playing: " + getNoteNameFromMIDI(gridPressedNote), SCREEN_WIDTH / 2, ctrlY + 10, 1);
   }
 }
 
 void drawGridCell(int row, int col, bool pressed) {
-  int cellW = SCALED_W(45);
-  int cellH = SCALED_H(32);
-  int startX = SCALED_W(10);
-  int startY = SCALED_H(55);
-  int spacing = SCALED_W(2);
+  // Calculate dimensions dynamically
+  int startX = 10;
+  int startY = CONTENT_TOP + 5;
+  int spacing = 2;
+  int availableWidth = SCREEN_WIDTH - (2 * startX);
+  int availableHeight = SCREEN_HEIGHT - startY - 60;
+  int cellW = (availableWidth - (GRID_COLS - 1) * spacing) / GRID_COLS;
+  int cellH = (availableHeight - (GRID_ROWS - 1) * spacing) / GRID_ROWS;
   
   int x = startX + col * (cellW + spacing);
   int y = startY + row * (cellH + spacing);
@@ -144,12 +149,14 @@ void handleGridPianoMode() {
     }
   }
   
-  // Grid interaction
-  int cellW = SCALED_W(45);
-  int cellH = SCALED_H(32);
-  int startX = SCALED_W(10);
-  int startY = SCALED_H(55);
-  int spacing = SCALED_W(2);
+  // Grid interaction - recalculate dimensions
+  int startX = 10;
+  int startY = CONTENT_TOP + 5;
+  int spacing = 2;
+  int availableWidth = SCREEN_WIDTH - (2 * startX);
+  int availableHeight = SCREEN_HEIGHT - startY - 60;
+  int cellW = (availableWidth - (GRID_COLS - 1) * spacing) / GRID_COLS;
+  int cellH = (availableHeight - (GRID_ROWS - 1) * spacing) / GRID_ROWS;
   
   int pressedNote = -1;
   

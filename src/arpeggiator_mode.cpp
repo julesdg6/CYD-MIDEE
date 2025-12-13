@@ -105,7 +105,8 @@ void drawArpControls() {
 }
 
 void drawPianoKeys() {
-  int keyY = 160;
+  // Calculate piano key position from screen dimensions
+  int keyY = SCREEN_HEIGHT - 60;
   int keyWidth = SCREEN_WIDTH / NUM_PIANO_KEYS;
   int keyHeight = 50;
   
@@ -269,8 +270,8 @@ void handleArpeggiatorMode() {
       return;
     }
     
-    // Piano key handling
-    int keyY = 160;
+    // Piano key handling - calculate position matching drawPianoKeys
+    int keyY = SCREEN_HEIGHT - 60;
     int keyWidth = SCREEN_WIDTH / NUM_PIANO_KEYS;
     int keyHeight = 50;
     

@@ -165,10 +165,11 @@ void drawGridsMode() {
   int hatFill = (grids.hatDensity * sliderW) / 255;
   if (hatFill > 0) tft.fillRect(366, sliderY + 1, hatFill, sliderH - 2, THEME_ACCENT);
   
-  // Control buttons at bottom
-  int btnY = 260;
+  // Control buttons at bottom - calculated from screen dimensions
+  int btnSpacing = 10;
+  int btnY = SCREEN_HEIGHT - 60;
   int btnH = 50;
-  int btnW = 80;
+  int btnW = (SCREEN_WIDTH - (6 * btnSpacing)) / 5;
   
   drawRoundButton(10, btnY, btnW, btnH, grids.playing ? "STOP" : "PLAY", THEME_PRIMARY, false);
   drawRoundButton(100, btnY, btnW, btnH, "BPM-", THEME_SECONDARY, false);
@@ -234,10 +235,17 @@ void handleGridsMode() {
       return;
     }
     
-    // Check control buttons
-    int btnY = 260;
+    // Check control buttons - calculate matching drawGridsMode
+    int btnSpacing = 10;
+    int btnY = SCREEN_HEIGHT - 60;
     int btnH = 50;
-    int btnW = 80;
+    int btnW = (SCREEN_WIDTH - (6 * btnSpacing)) / 5;
+    
+    int btn1X = btnSpacing;
+    int btn2X = btnSpacing * 2 + btnW;
+    int btn3X = btnSpacing * 3 + btnW * 2;
+    int btn4X = btnSpacing * 4 + btnW * 3;
+    int btn5X = btnSpacing * 5 + btnW * 4;
     
     // Check button press states
     bool playPressed = touch.isPressed && isButtonPressed(10, btnY, btnW, btnH);
