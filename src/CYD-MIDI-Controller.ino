@@ -15,6 +15,9 @@
 #include <WiFi.h>
 #include <WebServer.h>
 
+// Include hardware abstraction layer
+#include "cyd_hardware.h"
+
 // Include calibration first (needs tft and ts)
 #include "touch_calibration.h"
 
@@ -39,16 +42,10 @@
 // #include "ui_manager.h"  // Will be used after mode migration to event-driven UI
 #include "midi_utils.h"
 
-// Hardware setup
-#define XPT2046_IRQ 36
-#define XPT2046_MOSI 32
-#define XPT2046_MISO 39
-#define XPT2046_CLK 25
-#define XPT2046_CS 33
-#define SD_CS 5    // SD card CS pin
-#define SD_MOSI 23 // SD card uses different SPI pins than display
-#define SD_MISO 19
-#define SD_SCK 18
+// Hardware pin definitions now in cyd_hardware.h
+// Kept here as comments for reference:
+// XPT2046_IRQ, XPT2046_MOSI, XPT2046_MISO, XPT2046_CLK, XPT2046_CS
+// SD_CS, SD_MOSI, SD_MISO, SD_SCK
 
 // SD card globals
 bool sdCardAvailable = false;
@@ -85,24 +82,14 @@ TouchState touch;
 // App state
 AppMode currentMode = MENU;
 
-// Board-specific rotation helpers (align display + touch)
+// Board-specific rotation helpers - now provided by cyd_hardware.h
+// Legacy function wrappers for backward compatibility
 uint8_t getDisplayRotation() {
-#if defined(SCREEN_WIDTH) && defined(SCREEN_HEIGHT)
-  // CYD 2.8" / 2.4" (ILI9341, 320x240 landscape desired)
-  #if (SCREEN_WIDTH == 320) && (SCREEN_HEIGHT == 240)
-    return 0;  // Portrait upright for ILI9341 small CYDs
-  #endif
-  // CYD 3.5" (ILI9488, 480x320)
-  #if (SCREEN_WIDTH == 480) && (SCREEN_HEIGHT == 320)
-    return 1;  // Landscape for ILI9488
-  #endif
-#endif
-  return 1;     // safe default landscape
+  return CYDHardware::getDisplayRotation();
 }
 
 uint8_t getTouchRotation() {
-  // Match display rotation so touch maps correctly
-  return getDisplayRotation();
+  return CYDHardware::getTouchRotation();
 }
 
 // Forward declarations
@@ -824,21 +811,18 @@ void setup() {
   delay(100);
   Serial.println("\n\nCYD MIDI Controller Starting...");
   
+  // Print hardware configuration
+  CYDHardware::printInfo();
+  
   // Initialize global state
   globalState.bpm = 120.0;
   globalState.isPlaying = false;
   globalState.currentMidiChannel = 1;
   
-  // Touch setup
-  mySpi.begin(XPT2046_CLK, XPT2046_MISO, XPT2046_MOSI, XPT2046_CS);
-  ts.begin();
-  ts.setRotation(getTouchRotation());
-  
-  // Display setup
-  tft.init();
-  tft.setRotation(getDisplayRotation());
-  pinMode(27, OUTPUT);
-  digitalWrite(27, HIGH);
+  // Initialize hardware using CYD abstraction layer
+  CYDHardware::initTouch(ts, mySpi);
+  CYDHardware::initDisplay(tft);
+  CYDHardware::setBacklight(true);  // Turn on backlight
   
   // Show splash screen immediately
   tft.fillScreen(THEME_BG);
@@ -847,7 +831,9 @@ void setup() {
   tft.setTextColor(THEME_TEXT, THEME_BG);
   tft.drawCentreString("Enhanced Edition", SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + 10, 2);
   tft.setTextColor(THEME_TEXT_DIM, THEME_BG);
-  tft.drawCentreString("Initializing...", SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + 40, 2);
+  String boardInfo = String("Hardware: ") + CYDHardware::getBoardName();
+  tft.drawCentreString(boardInfo, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + 30, 2);
+  tft.drawCentreString("Initializing...", SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + 50, 2);
   
   // Initialize SD card first (needed for calibration file loading)
   initSDCard();
@@ -856,8 +842,7 @@ void setup() {
   initTouchCalibration();
   
   // Re-initialize touch SPI after SD card to ensure it still works
-  mySpi.begin(XPT2046_CLK, XPT2046_MISO, XPT2046_MOSI, XPT2046_CS);
-  ts.begin();
+  CYDHardware::initTouch(ts, mySpi);
   Serial.println("Touch re-initialized after SD card");
   
   // BLE MIDI Setup

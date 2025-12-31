@@ -4,6 +4,7 @@
 #include <TFT_eSPI.h>
 #include <XPT2046_Touchscreen.h>
 #include <BLEDevice.h>
+#include "cyd_hardware.h"
 
 // Color scheme
 #define THEME_BG         0x0841
@@ -17,22 +18,14 @@
 #define THEME_TEXT       0xFFFF
 #define THEME_TEXT_DIM   0x8410
 
-// Screen dimensions - use TFT library defines if available, otherwise default to 480×320
-// Note: TFT_WIDTH/HEIGHT are portrait orientation, we use landscape (swap them)
+// Screen dimensions - now provided by cyd_hardware.h
+// Uses CYD_DISPLAY_WIDTH and CYD_DISPLAY_HEIGHT from hardware abstraction
 #ifndef SCREEN_WIDTH
-  #ifdef TFT_HEIGHT
-    #define SCREEN_WIDTH TFT_HEIGHT
-  #else
-    #define SCREEN_WIDTH 480
-  #endif
+  #define SCREEN_WIDTH CYD_DISPLAY_WIDTH
 #endif
 
 #ifndef SCREEN_HEIGHT
-  #ifdef TFT_WIDTH
-    #define SCREEN_HEIGHT TFT_WIDTH
-  #else
-    #define SCREEN_HEIGHT 320
-  #endif
+  #define SCREEN_HEIGHT CYD_DISPLAY_HEIGHT
 #endif
 
 #define CONTENT_TOP      50  // Below header
