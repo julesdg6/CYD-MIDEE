@@ -126,6 +126,8 @@ Advanced touchscreen Bluetooth MIDI controller for the ESP32-2432S028R "Cheap Ye
 
 All boards available for ~$15 from AliExpress/Amazon
 
+> **📌 Hardware Abstraction:** The project includes a unified hardware abstraction layer (`cyd_hardware.h`) that automatically detects your board variant and configures display rotation, touch mapping, and pin assignments. This eliminates manual configuration and ensures correct orientation on all boards. See [BUILD.md](BUILD.md) for details.
+
 > **📌 Pin Map:** Complete pin assignments for display, touch, SD card, and available expansion pins are documented in [BUILD.md - Pin Map Reference](BUILD.md#pin-map-reference)
 
 ### Additional
@@ -137,6 +139,8 @@ All boards available for ~$15 from AliExpress/Amazon
 
 ### Recent Enhancements
 
+- ✅ **Hardware abstraction layer** - Automatic board detection and configuration
+- ✅ **Simplified build system** - 60% reduction in platformio.ini complexity
 - ✅ **Multi-resolution support** - Automatic screen scaling for 480×320, 320×240 displays
 - ✅ **Larger touch targets** - Minimum 45px buttons for better accuracy
 - ✅ **Fixed touch detection** - Resolved Y-coordinate mismatches in all modes
