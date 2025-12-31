@@ -284,9 +284,9 @@ Even without using the library, the board definitions provide valuable reference
 3. **If major UI redesign desired**: Full LVGL migration (Option A, 8-12 weeks)
 
 **Action Required**: Issue author should:
-- Test current cyd35 implementation for display issues
-- If issues exist, try ST7796_DRIVER fix (Option B)
-- Clarify if LVGL migration is desired (Option A)
+1. [ ] Test current cyd35 implementation for display issues
+2. [ ] If issues exist, try ST7796_DRIVER fix (Option B)
+3. [ ] Clarify if LVGL migration is desired (Option A)
 
 ---
 
