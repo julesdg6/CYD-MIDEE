@@ -2,6 +2,23 @@
 
 This project has been migrated to PlatformIO for easier compilation and dependency management.
 
+## Hardware Abstraction
+
+**New in this version:** The project now includes a hardware abstraction layer (`cyd_hardware.h`) that automatically handles board-specific configuration:
+
+- **Automatic Board Detection:** Detects CYD variant (2.4", 2.8", 3.5") from build flags
+- **Centralized Pin Definitions:** All hardware pins defined in one place
+- **Rotation Management:** Correct display and touch orientation for each board
+- **Simplified Configuration:** Reduced `platformio.ini` complexity via shared build flags
+
+The hardware abstraction provides:
+- `CYDHardware::initDisplay()` - Initialize display with correct rotation
+- `CYDHardware::initTouch()` - Initialize touchscreen with correct settings
+- `CYDHardware::getDisplayWidth/Height()` - Get screen dimensions
+- `CYDHardware::getBoardName()` - Get human-readable board identifier
+
+All pin definitions (touch, SD card, display) are now in `cyd_hardware.h` instead of scattered throughout the codebase.
+
 ## Prerequisites
 
 ### Option 1: VS Code (Recommended)
@@ -18,9 +35,11 @@ brew install platformio
 
 ```
 CYD-MIDI-Controller/
-├── platformio.ini           # PlatformIO configuration
+├── platformio.ini           # PlatformIO configuration (simplified)
 ├── src/                     # Source code
 │   ├── CYD-MIDI-Controller.ino  # Main sketch
+│   ├── cyd_hardware.h       # Hardware abstraction layer (NEW)
+│   ├── common_definitions.h # Shared constants and types
 │   ├── User_Setup.h         # TFT_eSPI display configuration
 │   ├── *.h                  # Mode headers (keyboard, sequencer, etc.)
 │   └── ...
@@ -105,22 +124,34 @@ The project is configured for `esp32dev` (generic ESP32). If you have a specific
 3. Find available boards: `pio boards esp32`
 
 ### Display Configuration
-Display pins are configured in `platformio.ini` under `build_flags`:
-- `TFT_MISO`, `TFT_MOSI`, `TFT_SCLK` - SPI pins
-- `TFT_CS`, `TFT_DC`, `TFT_RST` - Control pins
-- `TFT_BL` - Backlight pin
 
-If your display uses different pins, update these values in `platformio.ini`.
+**Note:** With the new hardware abstraction layer, most display configuration is now automatic. Pin assignments are defined in `cyd_hardware.h` and selected automatically based on the board variant you build for.
+
+Display settings in `platformio.ini` are now simplified with common flags shared across board variants:
+- Board-specific flags: `DILI9488_DRIVER` (3.5") or `DILI9341_DRIVER` (2.8"/2.4")
+- Board-specific pins: Only `TFT_BL` backlight pin differs (GPIO27 for 3.5", GPIO21 for 2.8"/2.4")
+- Common pins: All other display pins are identical across boards
+
+The hardware abstraction layer (`CYDHardware` class) automatically:
+- Sets correct display rotation for each board
+- Maps touch coordinates properly
+- Provides correct screen dimensions
+
+If you need to customize pins for a non-standard board, edit `cyd_hardware.h`.
 
 ### Touch Controller
-Touch controller pins are defined in the main sketch:
+
+Touch controller pins are now defined in `cyd_hardware.h` (previously in main sketch):
 ```cpp
-#define XPT2046_IRQ 36
-#define XPT2046_MOSI 32
-#define XPT2046_MISO 39
-#define XPT2046_CLK 25
-#define XPT2046_CS 33
+// Touch pins (common to all CYD boards)
+#define CYD_TOUCH_IRQ    36
+#define CYD_TOUCH_MOSI   32
+#define CYD_TOUCH_MISO   39
+#define CYD_TOUCH_CLK    25
+#define CYD_TOUCH_CS     33
 ```
+
+Legacy pin names (`XPT2046_*`) are supported via compatibility macros.
 
 ## Pin Map Reference
 
