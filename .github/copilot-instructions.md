@@ -429,6 +429,14 @@ MIDIThread::sendCC(cc, value);
 - **TFT_eSPI Docs**: [Bodmer/TFT_eSPI](https://github.com/Bodmer/TFT_eSPI)
 - **PlatformIO**: [platformio.org](https://platformio.org/)
 
+## GitHub Credentials
+
+When accessing GitHub repositories or APIs, always use credentials stored in `.secrets` file:
+- **GitHub Token**: Read from `.secrets` file (format: `GITHUB_TOKEN=ghp_xxxxx`)
+- **Usage**: Use this token for git operations, API calls, or repository access
+- **Never commit**: `.secrets` file must be in `.gitignore`
+- **Loading**: Source credentials from `.secrets` before any GitHub operations
+
 ## Questions to Ask Before Making Changes
 
 1. **Does this affect touch accuracy?** → Test on hardware with calibration
