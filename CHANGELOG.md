@@ -1,5 +1,24 @@
 # Changelog
 
+## [Unreleased] - LVGL Migration in Progress
+
+### Phase 1.2: Build System Migration - ✅ COMPLETE (2025-12-31)
+- **Added** LVGL v9.1.0 dependency to platformio.ini
+- **Added** esp32-smartdisplay v3.0.8 library for hardware abstraction
+- **Created** `src/lv_conf.h` configuration file (RGB565, 64KB heap, 30 FPS)
+- **Configured** LVGL build flags and memory settings
+- **Verified** compilation successful on cyd28 (1.73MB binary, 76.6KB RAM)
+- **Maintained** backward compatibility with legacy TFT_eSPI during migration
+- **Documentation**: See `docs/PHASE_1_2_COMPLETION.md` for full details
+
+### Migration Status
+- Phase 1.1: LVGL Learning & Environment Setup - ⏳ In Progress
+- Phase 1.2: Build System Migration - ✅ Complete
+- Phase 1.3: Hardware Initialization Refactor - ⏳ Next
+- For full migration plan, see `LVGL_MIGRATION_PLAN.md`
+
+---
+
 ## [2.0.0] - 2025-12-10
 
 ### Major Features Added
