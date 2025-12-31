@@ -14,6 +14,14 @@ OUTPUT_DIR="${2:-./screenshots}"
 # Remove trailing slash from URL
 DEVICE_URL="${DEVICE_URL%/}"
 
+# Detect current environment from platformio.ini
+if [ -f platformio.ini ]; then
+    ENV=$(grep "^default_envs" platformio.ini | cut -d"=" -f2 | tr -d " ")
+    if [ -n "$ENV" ]; then
+        echo "📋 Detected board environment: $ENV"
+    fi
+fi
+
 # Create output directory
 mkdir -p "$OUTPUT_DIR"
 

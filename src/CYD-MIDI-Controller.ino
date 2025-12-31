@@ -378,7 +378,11 @@ void saveScreenshot(String filename) {
     SD.mkdir("/screenshots");
   }
   
-  String filepath = "/screenshots/" + filename + ".bmp";
+  // Add board environment prefix to filename
+  #ifndef BOARD_ENV
+  #define BOARD_ENV "unknown"
+  #endif
+  String filepath = "/screenshots/" + String(BOARD_ENV) + "_" + filename + ".bmp";
   File file = SD.open(filepath, FILE_WRITE);
   if (!file) {
     Serial.println("Failed to create screenshot file: " + filepath);
@@ -509,6 +513,12 @@ void cycleModesForScreenshots() {
   // Get WiFi IP address for URL display
   String ipAddr = WiFi.localIP().toString();
   
+  // Board environment prefix for filenames
+  #ifndef BOARD_ENV
+  #define BOARD_ENV "unknown"
+  #endif
+  String boardPrefix = String(BOARD_ENV) + "_";
+  
   // Now cycle through all 15 modes
   String fileNames[] = {"03_keyboard", "04_sequencer", "05_bouncing_ball", "06_physics_drop",
                         "07_random_gen", "08_xy_pad", "09_arpeggiator", "10_grid_piano",
@@ -521,7 +531,7 @@ void cycleModesForScreenshots() {
     tft.setTextColor(THEME_PRIMARY, THEME_SURFACE);
     tft.drawCentreString("Mode " + String(i+1) + "/15: " + modeNames[i], SCREEN_WIDTH/2, 125, 4);
     tft.setTextColor(THEME_TEXT_DIM, THEME_SURFACE);
-    String url = "http://" + ipAddr + "/download?file=/screenshots/" + fileNames[i] + ".bmp";
+    String url = "http://" + ipAddr + "/download?file=/screenshots/" + boardPrefix + fileNames[i] + ".bmp";
     tft.drawCentreString(url, SCREEN_WIDTH/2, 160, 1);
     
     // Also print to serial for easy copying
