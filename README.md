@@ -137,12 +137,20 @@ All boards available for ~$15 from AliExpress/Amazon
 
 ### Recent Enhancements
 
+#### 🚧 LVGL Migration (In Progress)
+- ✅ **Phase 1.2 Complete** - Build system migrated to LVGL v9.1.0 + esp32-smartdisplay
+- 📝 See [LVGL Migration Plan](LVGL_MIGRATION_PLAN.md) for full roadmap
+- 📊 [Phase 1.2 Completion Report](docs/PHASE_1_2_COMPLETION.md) - Build verification results
+
+#### UI/UX Improvements
 - ✅ **Multi-resolution support** - Automatic screen scaling for 480×320, 320×240 displays
 - ✅ **Larger touch targets** - Minimum 45px buttons for better accuracy
 - ✅ **Fixed touch detection** - Resolved Y-coordinate mismatches in all modes
 - ✅ **Improved layouts** - Settings menu, Grid Piano (45×32 cells), Auto Chord, Arpeggiator
 - ✅ **Better spacing** - No overlapping buttons, optimized layouts
 - ✅ **Header icons** - BLE status, SD card indicator, and BPM display on main menu
+
+#### Advanced Features
 - ✅ **MIDI channel support** - Configurable per-session MIDI channels (1-16)
 - ✅ **Expanded flash memory** - 3.1MB app partition for advanced features
 - ✅ **5 new advanced modes** - TB3PO, Grids, Raga, Euclidean, Morph
