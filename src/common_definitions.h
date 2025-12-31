@@ -17,19 +17,18 @@
 #define THEME_TEXT       0xFFFF
 #define THEME_TEXT_DIM   0x8410
 
-// Screen dimensions - use TFT library defines if available, otherwise default to 480×320
-// Note: TFT_WIDTH/HEIGHT are portrait orientation, we use landscape (swap them)
+// Screen dimensions - use TFT library defines directly (already in landscape orientation)
 #ifndef SCREEN_WIDTH
-  #ifdef TFT_HEIGHT
-    #define SCREEN_WIDTH TFT_HEIGHT
+  #ifdef TFT_WIDTH
+    #define SCREEN_WIDTH TFT_WIDTH
   #else
     #define SCREEN_WIDTH 480
   #endif
 #endif
 
 #ifndef SCREEN_HEIGHT
-  #ifdef TFT_WIDTH
-    #define SCREEN_HEIGHT TFT_WIDTH
+  #ifdef TFT_HEIGHT
+    #define SCREEN_HEIGHT TFT_HEIGHT
   #else
     #define SCREEN_HEIGHT 320
   #endif

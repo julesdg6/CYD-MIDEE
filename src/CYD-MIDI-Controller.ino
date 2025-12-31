@@ -90,7 +90,7 @@ uint8_t getDisplayRotation() {
 #if defined(SCREEN_WIDTH) && defined(SCREEN_HEIGHT)
   // CYD 2.8" / 2.4" (ILI9341, 320x240 landscape desired)
   #if (SCREEN_WIDTH == 320) && (SCREEN_HEIGHT == 240)
-    return 0;  // Portrait upright for ILI9341 small CYDs
+    return 3;  // Landscape for ILI9341 small CYDs (USB port on left)
   #endif
   // CYD 3.5" (ILI9488, 480x320)
   #if (SCREEN_WIDTH == 480) && (SCREEN_HEIGHT == 320)
