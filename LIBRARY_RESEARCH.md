@@ -104,34 +104,43 @@ void loop() {
 
 **Scope:**
 - Keep TFT_eSPI and XPT2046_Touchscreen
-- Update platformio.ini to reference Sunton board variants
-- Extract correct pin/driver settings from board JSON files
+- **Fix driver mismatch for cyd35** (ILI9488 → ST7796)
+- Update platformio.ini to reference Sunton board variants (optional)
 - Verify rotation/mirror settings match board specs
 
 **Estimated Effort:**
-- platformio.ini updates: 1 hour
+- Driver fix and testing: 1-2 hours
+- platformio.ini board reference updates (optional): 1 hour
 - Testing on all 3 variants: 2 hours
-- **Total: 2-4 hours**
+- **Total: 3-5 hours**
 
 **Benefits:**
-- ✅ Minimal code changes
+- ✅ Fixes potential cyd35 display issues
 - ✅ Correct hardware configuration guaranteed
 - ✅ Low risk of bugs
 - ✅ Keeps existing codebase intact
 - ✅ Documents correct board settings
 
 **Implementation:**
-1. Change `platformio.ini` board types:
+1. **Fix cyd35 driver** (platformio.ini):
+   ```ini
+   [env:cyd35]
+   build_flags =
+     # Change from:
+     # -DILI9488_DRIVER=1
+     # To:
+     -DST7796_DRIVER=1
+   ```
+
+2. (Optional) Change board types to use Sunton definitions:
    ```ini
    [env:cyd28]
    board = esp32-2432S028R  # From boards/ submodule
    ```
 
-2. Remove manual pin configuration (board defines provide them)
-
 3. Test on all 3 board variants
 
-**Recommendation**: ✅ **RECOMMENDED** if configuration issues exist
+**Recommendation**: ✅ **RECOMMENDED** - Fixes potential driver mismatch issue
 
 ---
 
@@ -215,14 +224,17 @@ Even without using the library, the board definitions provide valuable reference
 **Current platformio.ini comparison:**
 - ✅ Pin configuration matches board definitions
 - ✅ Backlight pins correct (21 for cyd28, 27 for cyd24/cyd35)
-- ⚠️ Driver selection: Uses ILI9488_DRIVER for cyd35 (board says ST7796_SPI)
-  - Note: ST7796 and ILI9488 are similar, may be compatible
+- ⚠️ **Driver mismatch for cyd35**: platformio.ini uses ILI9488_DRIVER, but board definition specifies ST7796_SPI
+  - **Action Required**: Test if ST7796 driver should be used instead
+  - ST7796 and ILI9488 are similar controllers but not identical
+  - This may explain potential orientation issues on cyd35 if they exist
 
 ## Issues Referenced
 
 ### julesdg6/CYD-MIDEE#75 - Display Orientation
 **Claimed Fix**: Library handles rotation automatically  
 **Reality**: Library requires LVGL migration  
+**Potential Root Cause**: Driver mismatch on cyd35 (ILI9488 vs ST7796)  
 **Current Status**: Need to verify if this is actually broken
 
 ### julesdg6/CYD-MIDEE#37 - Touchscreen Compatibility
@@ -230,19 +242,51 @@ Even without using the library, the board definitions provide valuable reference
 **Reality**: Current code only supports XPT2046 (resistive), all "R" variants have XPT2046  
 **Current Status**: Not an issue unless adding "C" (capacitive) variant support
 
+## Potential Issues Found
+
+### CYD 3.5" (cyd35) - Driver Mismatch ⚠️
+
+**Current platformio.ini:**
+```ini
+-DILI9488_DRIVER=1
+```
+
+**Board definition (esp32-3248S035R.json):**
+```json
+"DISPLAY_ST7796_SPI"
+```
+
+**Impact**: 
+- ILI9488 and ST7796 are different display controllers
+- Using wrong driver may cause orientation, color, or rendering issues
+- This could be the root cause of issue #75 if it exists
+
+**Fix (Option B):**
+```ini
+# Change from:
+-DILI9488_DRIVER=1
+
+# To:
+-DST7796_DRIVER=1
+```
+
+**Testing Required**: Verify this doesn't break existing cyd35 deployments
+
 ## Conclusion
 
 **Primary Finding**: Cannot use esp32-smartdisplay library without full LVGL migration.
 
-**Recommendations**:
-1. **If no bugs exist**: Close issue, keep current implementation (Option C)
-2. **If minor config issues exist**: Use board definitions for reference (Option B)
-3. **If major UI redesign desired**: Full LVGL migration (Option A, 3+ months)
+**Secondary Finding**: Identified potential driver mismatch for cyd35 (ILI9488 vs ST7796).
 
-**Action Required**: Issue author must clarify:
-- Are there actual bugs to fix?
-- What is the real problem this issue is trying to solve?
-- Is LVGL migration acceptable? (8-12 weeks effort)
+**Recommendations**:
+1. **First, try Option B**: Fix cyd35 driver mismatch (1-2 hours, low risk)
+2. **If no bugs exist after fix**: Keep current implementation (Option C)
+3. **If major UI redesign desired**: Full LVGL migration (Option A, 8-12 weeks)
+
+**Action Required**: Issue author should:
+- Test current cyd35 implementation for display issues
+- If issues exist, try ST7796_DRIVER fix (Option B)
+- Clarify if LVGL migration is desired (Option A)
 
 ---
 
