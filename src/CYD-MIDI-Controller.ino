@@ -87,17 +87,9 @@ AppMode currentMode = MENU;
 
 // Board-specific rotation helpers (align display + touch)
 uint8_t getDisplayRotation() {
-#if defined(SCREEN_WIDTH) && defined(SCREEN_HEIGHT)
-  // CYD 2.8" / 2.4" (ILI9341, 320x240 landscape desired)
-  #if (SCREEN_WIDTH == 320) && (SCREEN_HEIGHT == 240)
-    return 3;  // Landscape for ILI9341 small CYDs (USB port on left)
-  #endif
-  // CYD 3.5" (ILI9488, 480x320)
-  #if (SCREEN_WIDTH == 480) && (SCREEN_HEIGHT == 320)
-    return 1;  // Landscape for ILI9488
-  #endif
-#endif
-  return 1;     // safe default landscape
+  // All CYDs use rotation 1 for landscape (original repo approach)
+  // Library expects portrait dimensions (240×320), rotation makes it landscape
+  return 1;
 }
 
 uint8_t getTouchRotation() {
@@ -827,8 +819,12 @@ void setup() {
   // Display setup
   tft.init();
   tft.setRotation(getDisplayRotation());
-  pinMode(27, OUTPUT);
-  digitalWrite(27, HIGH);
+  
+  // Backlight control - use TFT_BL from User_Setup.h
+  #ifdef TFT_BL
+    pinMode(TFT_BL, OUTPUT);
+    digitalWrite(TFT_BL, HIGH);
+  #endif
   
   // Show splash screen immediately
   tft.fillScreen(THEME_BG);
@@ -844,6 +840,11 @@ void setup() {
   
   // Initialize touch calibration (will auto-calibrate if needed, after SD is ready)
   initTouchCalibration();
+  
+  // Apply calibrated rotation to display (calibration.rotation set by initTouchCalibration)
+  tft.setRotation(calibration.rotation);
+  ts.setRotation(calibration.rotation);
+  Serial.printf("Display and touch rotation set to: %d\n", calibration.rotation);
   
   // Re-initialize touch SPI after SD card to ensure it still works
   mySpi.begin(XPT2046_CLK, XPT2046_MISO, XPT2046_MOSI, XPT2046_CS);

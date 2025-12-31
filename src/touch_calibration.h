@@ -164,8 +164,8 @@ inline bool performCalibration() {
     int testY = map(testRawY, calibration.y_min, calibration.y_max, 0, SCREEN_HEIGHT);
     
     // Determine rotation based on where the test point landed
-    // Expected: around bottom-right quadrant
-    // If inverted: around (40, 40)
+    // For 320×240 landscape, rotation=1 is correct (USB on right)
+    // We assume landscape orientation for all CYD boards
     
     if (testX < SCREEN_WIDTH/2 && testY < SCREEN_HEIGHT/2) {
       // Touch landed in top-left quadrant instead of bottom-right - 180° rotation
@@ -177,12 +177,12 @@ inline bool performCalibration() {
       // Touch landed in top-right quadrant instead of bottom-right - possible 270° rotation
       calibration.rotation = 1;
     } else {
-      // Touch landed in correct quadrant
-      calibration.rotation = 0;
+      // Touch landed in correct quadrant - use rotation 1 for landscape
+      calibration.rotation = 1;
     }
   } else {
-    // Timeout on test point, assume no rotation
-    calibration.rotation = 0;
+    // Timeout on test point, assume landscape rotation 1
+    calibration.rotation = 1;
   }
   
   calibration.magic = CALIBRATION_MAGIC;
@@ -221,13 +221,13 @@ inline void initTouchCalibration() {
       Serial.println("Calibration saved to SD card!");
     } else {
       Serial.println("Calibration failed, using defaults");
-      // Set reasonable defaults for 3.5" CYD
+      // Set reasonable defaults for current board
       calibration.x_min = 300;
       calibration.x_max = 3700;
       calibration.y_min = 280;
       calibration.y_max = 3800;
       calibration.swap_xy = false;
-      calibration.rotation = 0;
+      calibration.rotation = 1;  // Always use rotation 1 for landscape
       calibration.valid = true;
     }
   }

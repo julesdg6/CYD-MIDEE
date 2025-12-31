@@ -17,20 +17,21 @@
 #define THEME_TEXT       0xFFFF
 #define THEME_TEXT_DIM   0x8410
 
-// Screen dimensions - use TFT library defines directly (already in landscape orientation)
+// Screen dimensions - LANDSCAPE after rotation=1 (swap portrait TFT_WIDTH/HEIGHT)
+// After setRotation(1), a 240×320 portrait display becomes 320×240 landscape
 #ifndef SCREEN_WIDTH
-  #ifdef TFT_WIDTH
-    #define SCREEN_WIDTH TFT_WIDTH
+  #ifdef TFT_HEIGHT
+    #define SCREEN_WIDTH TFT_HEIGHT  // Width = original height (320 for ILI9341, 480 for ILI9488)
   #else
-    #define SCREEN_WIDTH 480
+    #define SCREEN_WIDTH 480  // Default for 3.5" display
   #endif
 #endif
 
 #ifndef SCREEN_HEIGHT
-  #ifdef TFT_HEIGHT
-    #define SCREEN_HEIGHT TFT_HEIGHT
+  #ifdef TFT_WIDTH
+    #define SCREEN_HEIGHT TFT_WIDTH  // Height = original width (240 for ILI9341)
   #else
-    #define SCREEN_HEIGHT 320
+    #define SCREEN_HEIGHT 320  // Default for 3.5" display
   #endif
 #endif
 
