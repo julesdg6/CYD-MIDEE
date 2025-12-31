@@ -171,7 +171,8 @@ enum AppMode {
   GRIDS,
   RAGA,
   EUCLIDEAN,
-  MORPH
+  MORPH,
+  LVGL_TEST  // Phase 1.3: LVGL hardware validation test
 };
 
 // Music theory

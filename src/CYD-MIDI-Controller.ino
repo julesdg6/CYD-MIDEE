@@ -15,6 +15,10 @@
 #include <WiFi.h>
 #include <WebServer.h>
 
+// LVGL includes (Phase 1.3)
+#include <lvgl.h>
+#include <esp32_smartdisplay.h>
+
 // Include calibration first (needs tft and ts)
 #include "touch_calibration.h"
 
@@ -34,6 +38,7 @@
 #include "raga_mode.h"
 #include "euclidean_mode.h"
 #include "morph_mode.h"
+#include "lvgl_test_mode.h"  // Phase 1.3: LVGL hardware test
 #include "web_server.h"
 #include "ui_elements.h"
 // #include "ui_manager.h"  // Will be used after mode migration to event-driven UI
@@ -65,6 +70,10 @@ bool longPressTriggered = false;
 
 // Screenshot counter
 int screenshotCount = 0;
+
+// LVGL globals (Phase 1.3)
+static unsigned long lv_last_tick = 0;
+bool lvglInitialized = false;
 
 // Global objects
 SPIClass mySpi = SPIClass(VSPI);  // Touch uses VSPI
@@ -118,7 +127,7 @@ struct AppIcon {
   AppMode mode;
 };
 
-#define MAX_APPS 15  // Can easily expand to 3x5 grid
+#define MAX_APPS 16  // Expanded for LVGL test mode
 // RGB565 optimized colors - 5 bits red, 6 bits green, 5 bits blue
 AppIcon apps[] = {
   {"KEYS", "♪", 0x1A3D, KEYBOARD},     // Deep navy (row 1)
@@ -130,15 +139,16 @@ AppIcon apps[] = {
   {"ARP", "↗", 0x2DC5, ARPEGGIATOR},   // Green
   {"PADS", "▣", 0x8E88, PADS},   // Lime green
   {"CHORD", "⚘", 0xCF8A, AUTO_CHORD},  // Yellow-green
-  {"LFO", "", 0xFFE0, LFO},            // Yellow
+  {"LFO", "~", 0xFFE0, LFO},            // Yellow
   {"TB3PO", "😊", 0xFD60, TB3PO},       // Amber (row 3) - acid smiley
   {"GRIDS", "◉", 0xFB20, GRIDS},       // Orange - MI Grids
   {"RAGA", "🎵", 0xF8A5, RAGA},         // Red-orange - Indian classical
   {"EUCLID", "◯", 0xF800, EUCLIDEAN},  // Pure red - Euclidean rhythm
-  {"MORPH", "∞", 0x8800, MORPH}        // Dark red - Gesture morphing
+  {"MORPH", "∞", 0x8800, MORPH},       // Dark red - Gesture morphing
+  {"LVGL", "✓", 0x07E0, LVGL_TEST}     // Green - LVGL hardware test (row 4)
 };
 
-int numApps = 15;
+int numApps = 16;
 
 class MIDICallbacks: public BLEServerCallbacks {
     void onConnect(BLEServer* pServer) {
@@ -456,31 +466,31 @@ void cycleModesForScreenshots() {
   
   AppMode modes[] = {KEYBOARD, SEQUENCER, BOUNCING_BALL, PHYSICS_DROP, 
                      RANDOM_GENERATOR, XY_PAD, ARPEGGIATOR, PADS, 
-                     AUTO_CHORD, LFO, TB3PO, GRIDS, RAGA, EUCLIDEAN, MORPH};
+                     AUTO_CHORD, LFO, TB3PO, GRIDS, RAGA, EUCLIDEAN, MORPH, LVGL_TEST};
   String modeNames[] = {"KEYBOARD", "SEQUENCER", "BOUNCING BALL", "PHYSICS DROP",
                         "RANDOM GEN", "XY PAD", "ARPEGGIATOR", "PADS",
-                        "AUTO CHORD", "LFO", "TB3PO", "GRIDS", "RAGA", "EUCLIDEAN", "MORPH"};
+                        "AUTO CHORD", "LFO", "TB3PO", "GRIDS", "RAGA", "EUCLIDEAN", "MORPH", "LVGL TEST"};
   
   // First capture main menu
-  Serial.println("[Screenshot 1/18] Starting: MAIN MENU");
+  Serial.println("[Screenshot 1/19] Starting: MAIN MENU");
   tft.fillRect(0, 120, SCREEN_WIDTH, 40, THEME_SURFACE);
   tft.setTextColor(THEME_PRIMARY, THEME_SURFACE);
   tft.drawCentreString("Capturing: MAIN MENU", SCREEN_WIDTH/2, 130, 4);
   drawMenu();
-  Serial.println("[Screenshot 1/18] Capturing: 00_main_menu");
+  Serial.println("[Screenshot 1/19] Capturing: 00_main_menu");
   saveScreenshot("00_main_menu");
   
   // Capture settings menu
-  Serial.println("[Screenshot 2/18] Starting: SETTINGS");
+  Serial.println("[Screenshot 2/19] Starting: SETTINGS");
   tft.fillRect(0, 120, SCREEN_WIDTH, 40, THEME_SURFACE);
   tft.setTextColor(THEME_PRIMARY, THEME_SURFACE);
   tft.drawCentreString("Capturing: SETTINGS", SCREEN_WIDTH/2, 130, 4);
   showSettingsMenu(false);
-  Serial.println("[Screenshot 2/18] Capturing: 01_settings_menu");
+  Serial.println("[Screenshot 2/19] Capturing: 01_settings_menu");
   saveScreenshot("01_settings_menu");
   
   // Capture bluetooth menu
-  Serial.println("[Screenshot 3/18] Starting: BLUETOOTH");
+  Serial.println("[Screenshot 3/19] Starting: BLUETOOTH");
   tft.fillRect(0, 120, SCREEN_WIDTH, 40, THEME_SURFACE);
   tft.setTextColor(THEME_PRIMARY, THEME_SURFACE);
   tft.drawCentreString("Capturing: BLUETOOTH", SCREEN_WIDTH/2, 130, 4);
@@ -495,37 +505,37 @@ void cycleModesForScreenshots() {
   tft.drawCentreString("MAC: " + mac, SCREEN_WIDTH/2, 190, 2);
   int backBtnX2 = (SCREEN_WIDTH - 100) / 2;
   drawRoundButton(backBtnX2, SCREEN_HEIGHT - 80, 100, 35, "BACK", THEME_PRIMARY);
-  Serial.println("[Screenshot 3/18] Capturing: 02_bluetooth_status");
+  Serial.println("[Screenshot 3/19] Capturing: 02_bluetooth_status");
   saveScreenshot("02_bluetooth_status");
   
   // Get WiFi IP address for URL display
   String ipAddr = WiFi.localIP().toString();
   
-  // Now cycle through all 15 modes
+  // Now cycle through all 16 modes
   String fileNames[] = {"03_keyboard", "04_sequencer", "05_bouncing_ball", "06_physics_drop",
                         "07_random_gen", "08_xy_pad", "09_arpeggiator", "10_grid_piano",
                         "11_auto_chord", "12_lfo", "13_tb3po", "14_grids", "15_raga", 
-                        "16_euclidean", "17_morph"};
+                        "16_euclidean", "17_morph", "18_lvgl_test"};
   
-  for (int i = 0; i < 15; i++) {
+  for (int i = 0; i < 16; i++) {
     // Show mode name and URL
     tft.fillRect(0, 120, SCREEN_WIDTH, 60, THEME_SURFACE);
     tft.setTextColor(THEME_PRIMARY, THEME_SURFACE);
-    tft.drawCentreString("Mode " + String(i+1) + "/15: " + modeNames[i], SCREEN_WIDTH/2, 125, 4);
+    tft.drawCentreString("Mode " + String(i+1) + "/16: " + modeNames[i], SCREEN_WIDTH/2, 125, 4);
     tft.setTextColor(THEME_TEXT_DIM, THEME_SURFACE);
     String url = "http://" + ipAddr + "/download?file=/screenshots/" + fileNames[i] + ".bmp";
     tft.drawCentreString(url, SCREEN_WIDTH/2, 160, 1);
     
     // Also print to serial for easy copying
-    Serial.printf("[Screenshot %d/15] Starting: %s\n", i+1, modeNames[i].c_str());
+    Serial.printf("[Screenshot %d/16] Starting: %s\n", i+1, modeNames[i].c_str());
     Serial.println(url);
     
     // Enter mode
-    Serial.printf("[Screenshot %d/15] Entering mode...\n", i+1);
+    Serial.printf("[Screenshot %d/16] Entering mode...\n", i+1);
     enterMode(modes[i]);
     
     // Capture immediately after entering mode (no overlay text)
-    Serial.printf("[Screenshot %d/15] Capturing: %s\n", i+1, fileNames[i].c_str());
+    Serial.printf("[Screenshot %d/16] Capturing: %s\n", i+1, fileNames[i].c_str());
     saveScreenshot(fileNames[i]);
     
     // Wait 500ms or until touch held to skip
@@ -556,13 +566,13 @@ void cycleModesForScreenshots() {
   }
   
   // Done
-  Serial.println("[Screenshot] Complete! 18 total screenshots saved.");
+  Serial.println("[Screenshot] Complete! 19 total screenshots saved.");
   tft.fillScreen(THEME_SUCCESS);
   tft.setTextColor(THEME_BG, THEME_SUCCESS);
   tft.drawCentreString("SCREENSHOTS SAVED", SCREEN_WIDTH/2, 120, 4);
-  tft.drawCentreString("18 BMP files in /screenshots/", SCREEN_WIDTH/2, 160, 2);
+  tft.drawCentreString("19 BMP files in /screenshots/", SCREEN_WIDTH/2, 160, 2);
   tft.setTextColor(0x0000, THEME_SUCCESS);
-  tft.drawCentreString("Menu + Settings + BLE + 15 Modes", SCREEN_WIDTH/2, 190, 1);
+  tft.drawCentreString("Menu + Settings + BLE + 16 Modes", SCREEN_WIDTH/2, 190, 1);
   tft.drawCentreString("Download via web interface", SCREEN_WIDTH/2, 210, 1);
   delay(100);
   
@@ -892,6 +902,26 @@ void setup() {
   Serial.println("BLE Advertising started - Device discoverable as 'CYD MIDI'");
   Serial.printf("BLE MAC Address: %s\n", BLEDevice::getAddress().toString().c_str());
   
+  // Initialize LVGL (Phase 1.3)
+  Serial.println("\n=== LVGL Initialization (Phase 1.3) ===");
+  try {
+    smartdisplay_init();
+    lvglInitialized = true;
+    lv_last_tick = millis();
+    
+    // Set LVGL display rotation to match TFT_eSPI
+    auto display = lv_display_get_default();
+    if (display != nullptr) {
+      lv_display_set_rotation(display, LV_DISPLAY_ROTATION_90);  // Landscape
+      Serial.println("LVGL display initialized and rotated to landscape");
+    }
+    
+    Serial.println("LVGL initialization complete!");
+  } catch (...) {
+    Serial.println("ERROR: LVGL initialization failed!");
+    lvglInitialized = false;
+  }
+  
   // NOTE: UIManager not initialized yet - will be used after mode migration
   // Modes will initialize when selected from menu (not at startup)
   // This improves startup time and avoids unnecessary resource usage
@@ -902,6 +932,14 @@ void setup() {
 }
 
 void loop() {
+  // LVGL ticker (Phase 1.3) - must be called regularly
+  if (lvglInitialized) {
+    unsigned long now = millis();
+    lv_tick_inc(now - lv_last_tick);
+    lv_last_tick = now;
+    lv_timer_handler();  // Handle LVGL tasks
+  }
+  
   // Update touch state (using existing calibration logic)
   updateTouch();
   
@@ -979,6 +1017,9 @@ void loop() {
       break;
     case MORPH:
       handleMorphMode();
+      break;
+    case LVGL_TEST:
+      handleLVGLTestMode();
       break;
   }
   
@@ -1239,6 +1280,22 @@ void drawAppGraphics(AppMode mode, int x, int y, int iconSize) {
         }
       }
       break;
+    case LVGL_TEST: // LVGL - Checkmark (validation test)
+      {
+        int centerX = x + iconSize/2;
+        // Draw checkmark
+        // Left part of check (short line going down-right)
+        for (int i = 0; i < 8; i++) {
+          tft.drawLine(centerX - 8 + i, topHalfY - 2 + i, 
+                      centerX - 7 + i, topHalfY - 1 + i, THEME_BG);
+        }
+        // Right part of check (long line going up-right)
+        for (int i = 0; i < 14; i++) {
+          tft.drawLine(centerX + i, topHalfY + 6 - i, 
+                      centerX + 1 + i, topHalfY + 7 - i, THEME_BG);
+        }
+      }
+      break;
   }
 }
 
@@ -1359,10 +1416,24 @@ void enterMode(AppMode mode) {
     case MORPH:
       initializeMorphMode();
       break;
+    case LVGL_TEST:
+      if (lvglInitialized) {
+        initializeLVGLTestMode();
+        drawLVGLTestMode();
+      } else {
+        Serial.println("ERROR: Cannot enter LVGL test mode - LVGL not initialized");
+        exitToMenu();
+      }
+      break;
   }
 }
 
 void exitToMenu() {
+  // Cleanup LVGL test mode if active
+  if (currentMode == LVGL_TEST) {
+    cleanupLVGLTestMode();
+  }
+  
   currentMode = MENU;
   stopAllModes();
   // NOTE: UIManager::clearMode() not called yet - will be used after mode migration
